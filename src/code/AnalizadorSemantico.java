@@ -18,6 +18,8 @@ public class AnalizadorSemantico {
         AuxSemantico.validarTiposEnAsignaciones(Repositorio.listaErrores);
         AuxSemantico.validarTiposEnOperaciones(Repositorio.listaErrores);
         AuxSemantico.validarCondicionesBooleanas(Repositorio.listaErrores);
+        AuxSemantico.validarTiposEnComparaciones(Repositorio.listaErrores); // ← NUEVO
+
     }
 
     public static void construirTablaSimbolos() {

@@ -232,4 +232,51 @@ public class AuxSemantico {
     private static boolean esTipoNumerico(String tipo) {
         return "TIPO_ENTERO".equals(tipo) || "TIPO_DECIMAL".equals(tipo) || "TIPO_CORTO".equals(tipo);
     }
+
+public static void validarTiposEnComparaciones(ArrayList<ErrorLSSL> errores) {
+    for (int i = 0; i < Repositorio.listaTokens.size(); i++) {
+        Token token = Repositorio.listaTokens.get(i);
+        
+        String comp = token.getLexicalComp();
+        boolean esRelacional = "OP_MAYOR".equals(comp)       || "OP_MENOR".equals(comp)  ||
+                               "OP_MAYOR_IGUAL".equals(comp) || "OP_MENOR_IGUAL".equals(comp) ||
+                               "OP_IGUAL_IGUAL".equals(comp) || "OP_DIFERENTE".equals(comp);
+        
+        if (!esRelacional || i == 0 || i + 1 >= Repositorio.listaTokens.size()) continue;
+        
+        Token izq = Repositorio.listaTokens.get(i - 1);
+        Token der = Repositorio.listaTokens.get(i + 1);
+        
+        String tipoIzq = obtenerTipoDeToken(izq);
+        String tipoDer = obtenerTipoDeToken(der);
+        
+        if (tipoIzq == null || tipoDer == null) continue;
+        
+        String mensaje = null;
+        
+        // Numérico (entero/decimal/corto) vs lógico
+        if ((esTipoNumerico(tipoIzq) && "TIPO_LOGICO".equals(tipoDer)) ||
+            (esTipoNumerico(tipoDer) && "TIPO_LOGICO".equals(tipoIzq))) {
+            mensaje = "No se puede comparar un número con un valor lógico (booleano)";
+        }
+        // Numérico vs texto
+        else if ((esTipoNumerico(tipoIzq) && "TIPO_TEXTO".equals(tipoDer)) ||
+                 (esTipoNumerico(tipoDer) && "TIPO_TEXTO".equals(tipoIzq))) {
+            mensaje = "No se puede comparar un número con un texto";
+        }
+        // Lógico vs texto
+        else if (("TIPO_LOGICO".equals(tipoIzq) && "TIPO_TEXTO".equals(tipoDer)) ||
+                 ("TIPO_TEXTO".equals(tipoIzq)   && "TIPO_LOGICO".equals(tipoDer))) {
+            mensaje = "No se puede comparar un valor lógico (booleano) con un texto";
+        }
+        
+        if (mensaje != null) {
+            errores.add(new ErrorLSSL(106,
+                "Error semántico: " + mensaje +
+                " (tipos incompatibles: '" + tipoIzq + "' y '" + tipoDer + "')", token));
+        }
+    }
+}
+
+
 }

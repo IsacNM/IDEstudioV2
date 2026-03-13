@@ -1,85 +1,74 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package code;
 
 import compilerTools.Token;
 import java.util.ArrayList;
 
 public class FiltroParentesis {
-    
-    /**
-     * Filtra paréntesis en asignaciones y switch, pero valida que estén balanceados
-     */
-   public static ArrayList<String> erroresEncontrados = new ArrayList<>();
-    
-public static ArrayList<Token> filtrarYValidar(ArrayList<Token> tokens) {
-    ArrayList<Token> resultado = new ArrayList<>();
-    boolean dentroDeAsignacion = false;
-    int contadorAsignacion = 0; 
-    Token ultimoParenAbierto = null; // Para saber en qué línea falló
 
-    for (Token t : tokens) {
-        String comp = t.getLexicalComp();
+    public static ArrayList<String> erroresEncontrados = new ArrayList<>();
 
-        // 1. Entramos a la zona de asignación
-        if ("ASIGNACION".equals(comp)) {
-            dentroDeAsignacion = true;
-            contadorAsignacion = 0; // Reiniciamos contador para esta expresión
-            resultado.add(t);
-            continue;
-        }
+    public static ArrayList<Token> filtrarYValidar(ArrayList<Token> tokens) {
+        ArrayList<Token> resultado = new ArrayList<>();
+        boolean dentroDeAsignacion = false;
+        int contadorAsignacion = 0;
+        Token ultimoParenAbierto = null;
 
-        // 2. Al llegar al PUNTO_COMA, revisamos si se cerraron todos
-        if ("PUNTO_COMA".equals(comp)) {
-            if (dentroDeAsignacion && contadorAsignacion > 0) {
-                // ERROR: Se acabó la línea y faltaron paréntesis de cierre
-                Repositorio.listaErrores.add(new compilerTools.ErrorLSSL(110, 
-                    "Error sintáctico: Faltan " + contadorAsignacion + " paréntesis de cierre ')' en la asignación.", 
-                    ultimoParenAbierto != null ? ultimoParenAbierto : t));
-            }
-            dentroDeAsignacion = false;
-            contadorAsignacion = 0;
-            resultado.add(t);
-            continue;
-        }
+        for (int i = 0; i < tokens.size(); i++) {
+            Token t = tokens.get(i);
+            String comp = t.getLexicalComp();
 
-        // 3. Contabilizar paréntesis
-        if ("PAREN_IZQ".equals(comp)) {
-            if (dentroDeAsignacion) {
-                contadorAsignacion++;
-                ultimoParenAbierto = t; // Guardamos el token para reportar la línea exacta
-                continue; // Lo quitamos para el sintáctico
-            }
-        }
-
-        if ("PAREN_DER".equals(comp)) {
-            if (dentroDeAsignacion) {
-                contadorAsignacion--;
-                if (contadorAsignacion < 0) {
-                    // ERROR: Sobró un paréntesis de cierre
-                    Repositorio.listaErrores.add(new compilerTools.ErrorLSSL(111, 
-                        "Error sintáctico: Sobra un paréntesis de cierre ')' en la asignación.", t));
-                    contadorAsignacion = 0; // Reset para no arrastrar el error
+            // ============================================================
+            // DETECTAR si el paréntesis pertenece a una estructura de control
+            // SI, WHILE, FOR, MOSTRAR, LEER → NO filtrar sus paréntesis
+            // ============================================================
+            if ("ASIGNACION".equals(comp)) {
+                // Verificar que el token anterior NO sea parte de estructura de control
+                // (es decir, que sea una asignación real: IDENTIFICADOR :=)
+                if (i > 0 && "IDENTIFICADOR".equals(tokens.get(i - 1).getLexicalComp())) {
+                    dentroDeAsignacion = true;
+                    contadorAsignacion = 0;
                 }
-                continue; // Lo quitamos para el sintáctico
+                resultado.add(t);
+                continue;
             }
+
+            // Al llegar al PUNTO_COMA cerramos la zona de asignación
+            if ("PUNTO_COMA".equals(comp)) {
+                if (dentroDeAsignacion && contadorAsignacion > 0) {
+                    Repositorio.listaErrores.add(new compilerTools.ErrorLSSL(110,
+                        "Error sintáctico: Faltan " + contadorAsignacion +
+                        " paréntesis de cierre ')' en la asignación.",
+                        ultimoParenAbierto != null ? ultimoParenAbierto : t));
+                }
+                dentroDeAsignacion = false;
+                contadorAsignacion = 0;
+                resultado.add(t);
+                continue;
+            }
+
+            // Solo filtramos paréntesis si estamos DENTRO de una asignación real
+            if (dentroDeAsignacion) {
+                if ("PAREN_IZQ".equals(comp)) {
+                    contadorAsignacion++;
+                    ultimoParenAbierto = t;
+                    continue; // Quitar paréntesis de la expresión de asignación
+                }
+                if ("PAREN_DER".equals(comp)) {
+                    contadorAsignacion--;
+                    if (contadorAsignacion < 0) {
+                        Repositorio.listaErrores.add(new compilerTools.ErrorLSSL(111,
+                            "Error sintáctico: Sobra un paréntesis de cierre ')' en la asignación.", t));
+                        contadorAsignacion = 0;
+                    }
+                    continue; // Quitar paréntesis de la expresión de asignación
+                }
+            }
+
+            // Todos los demás tokens pasan tal cual
+            // (incluyendo paréntesis de SI, WHILE, FOR, MOSTRAR, LEER)
+            resultado.add(t);
         }
 
-        // 4. Agregar tokens normales (incluye paréntesis de 'si' y 'mostrar' porque no están en asignación)
-        resultado.add(t);
-    }
-
-    return resultado;
-}
-    private static void agregarError(int linea, int columna, String mensaje) {
-        String errorCompleto = "Línea " + linea + ", Columna " + columna + ": " + mensaje;
-        erroresEncontrados.add(errorCompleto);
+        return resultado;
     }
 }
-    
-    /**
-     * Agrega un error a la lista de errores
-     */
- 
