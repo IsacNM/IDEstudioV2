@@ -1,6 +1,5 @@
 package code.editor;
 
-import code.utils.Position;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +17,8 @@ public class Editor {
         textArea.setHighlightCurrentLine(true);
 
         // Configuración de Autocompletado
-        List<String> sugerencias = new ArrayList<>(List.of(code.utils.AutoCompletadoPopUp.palabrasReservadas));
-        new code.utils.AutoCompletadoPopUp(textArea, sugerencias);
+        List<String> sugerencias = new ArrayList<>(List.of(code.editor.AutoCompletadoPopUp.palabrasReservadas));
+        new code.editor.AutoCompletadoPopUp(textArea, sugerencias);
 
         // Listener de posición
         textArea.addCaretListener(e -> Position.actualizarPosicionPuntero(textArea, positionLabel));

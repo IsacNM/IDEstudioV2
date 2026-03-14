@@ -1,11 +1,11 @@
 package code;
 
 import code.semantico.Simbolo;
-import code.semantico.Repositorio;
-import code.sintactico.FiltroParentesis;
+import code.semantico.FiltroParentesis;
 import code.sintactico.AnalizadorSintactico;
 import code.semantico.AnalizadorSemantico;
-import static code.utils.File.errorTab;
+import static code.editor.File.errorTab;
+import code.semantico.Repositorio;
 import compilerTools.ErrorLSSL;
 import compilerTools.Token;
 import javax.swing.JTabbedPane;

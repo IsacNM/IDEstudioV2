@@ -1,6 +1,5 @@
-package code.sintactico;
+package code.semantico;
 
-import code.semantico.Repositorio;
 import compilerTools.Token;
 import java.util.ArrayList;
 
@@ -18,23 +17,16 @@ public class FiltroParentesis {
             Token t = tokens.get(i);
             String comp = t.getLexicalComp();
 
-            // ============================================================
-            // DETECTAR si el paréntesis pertenece a una estructura de control
-            // SI, WHILE, FOR, MOSTRAR, LEER → NO filtrar sus paréntesis
-            // ============================================================
-            if ("ASIGNACION".equals(comp)) {
-                // Verificar que el token anterior NO sea parte de estructura de control
-                // (es decir, que sea una asignación real: IDENTIFICADOR :=)
-                if (i > 0 && "IDENTIFICADOR".equals(tokens.get(i - 1).getLexicalComp())) {
+            //si el paréntesis pertenece a una estructura de control, nO se filtraran sus paréntesis
+            if (TokenTipo.ASIGNACION.equals(comp)) {
+                if (i > 0 && TokenTipo.IDENTIFICADOR.equals(tokens.get(i - 1).getLexicalComp())) {
                     dentroDeAsignacion = true;
                     contadorAsignacion = 0;
                 }
                 resultado.add(t);
                 continue;
             }
-
-            // Al llegar al PUNTO_COMA cerramos la zona de asignación
-            if ("PUNTO_COMA".equals(comp)) {
+            if (TokenTipo.PUNTO_COMA.equals(comp)) {
                 if (dentroDeAsignacion && contadorAsignacion > 0) {
                     Repositorio.listaErrores.add(new compilerTools.ErrorLSSL(110,
                         "Error sintáctico: Faltan " + contadorAsignacion +
@@ -46,27 +38,22 @@ public class FiltroParentesis {
                 resultado.add(t);
                 continue;
             }
-
-            // Solo filtramos paréntesis si estamos DENTRO de una asignación real
             if (dentroDeAsignacion) {
-                if ("PAREN_IZQ".equals(comp)) {
+                if (TokenTipo.PAREN_IZQ.equals(comp)) {
                     contadorAsignacion++;
                     ultimoParenAbierto = t;
-                    continue; // Quitar paréntesis de la expresión de asignación
+                    continue;
                 }
-                if ("PAREN_DER".equals(comp)) {
+                if (TokenTipo.PAREN_DER.equals(comp)) {
                     contadorAsignacion--;
                     if (contadorAsignacion < 0) {
                         Repositorio.listaErrores.add(new compilerTools.ErrorLSSL(111,
                             "Error sintáctico: Sobra un paréntesis de cierre ')' en la asignación.", t));
                         contadorAsignacion = 0;
                     }
-                    continue; // Quitar paréntesis de la expresión de asignación
+                    continue;
                 }
             }
-
-            // Todos los demás tokens pasan tal cual
-            // (incluyendo paréntesis de SI, WHILE, FOR, MOSTRAR, LEER)
             resultado.add(t);
         }
 

@@ -1,4 +1,4 @@
-package code.utils;
+package code.editor;
 
 import java.awt.Rectangle;
 import java.awt.event.KeyAdapter;

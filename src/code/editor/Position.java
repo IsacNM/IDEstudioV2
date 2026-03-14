@@ -1,4 +1,4 @@
-package code.utils;
+package code.editor;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 

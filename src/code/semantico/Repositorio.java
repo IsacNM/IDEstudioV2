@@ -1,6 +1,5 @@
 package code.semantico;
 
-import code.semantico.Simbolo;
 import compilerTools.Token;
 import compilerTools.ErrorLSSL;
 import compilerTools.Production;
@@ -19,7 +18,7 @@ public class Repositorio {
         listaErrores.clear();
         tablaSimbolos.clear(); 
         idDeclaraciones.clear();
-        erroresSemanticos.clear(); // ← AGREGAR
+        erroresSemanticos.clear();
 
     }
     

@@ -1,9 +1,9 @@
-package code.utils;
+package code.editor;
 
 import java.io.*;
 import java.util.Properties;
 
-public class ClassArchivoPropiedades {
+public class ArchivoPropiedades {
 
     private final String RUTA = System.getProperty("user.dir") + "/config.properties";
 

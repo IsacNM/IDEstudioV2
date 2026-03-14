@@ -1,4 +1,4 @@
-package code.utils;
+package code.editor;
 
 import java.util.Calendar;
 import java.util.TimeZone;

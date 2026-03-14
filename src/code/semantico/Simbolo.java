@@ -1,10 +1,10 @@
 package code.semantico;
 
 public class Simbolo {
-    private String ident;          // Nombre de la variable
-    private String tipoDato;       // TIPO_ENTERO, TIPO_DECIMAL, etc.
-    private String valor;          // Valor inicial
-    private String varConstParam;  // "var" o "const"
+    private String ident;        
+    private String tipoDato;      
+    private String valor;         
+    private String varConstParam; 
 
  public String getIdent() {
         return ident;
