@@ -33,18 +33,25 @@ public class AuxSemantico {
 
         for (int i = 0; i < Repositorio.listaTokens.size(); i++) {
             Token token = Repositorio.listaTokens.get(i);
-
             if (!TokenTipo.IDENTIFICADOR.equals(token.getLexicalComp())) {
                 continue;
             }
-
             String nombreVar = token.getLexeme();
 
+            // Caso 1: var entero a  →  VAR está 2 posiciones atrás
             if (TokenUtils.tokenEn(i - 2, TokenTipo.VAR)) {
                 inicializadas.add(nombreVar);
                 continue;
             }
 
+            // Caso 2: var entero a, b, c  →  viene después de una COMA
+            // y hay un VAR en algún lugar antes dentro de la misma declaración
+            if (TokenUtils.tokenEn(i - 1, TokenTipo.COMA) && hayVarAntes(i)) {
+                inicializadas.add(nombreVar);
+                continue;
+            }
+
+            // Caso 3: a := 3  →  tiene asignación después
             if (TokenUtils.tokenEn(i + 1, TokenTipo.ASIGNACION)) {
                 inicializadas.add(nombreVar);
             } else if (Repositorio.tablaSimbolos.containsKey(nombreVar)
@@ -56,6 +63,20 @@ public class AuxSemantico {
                 ));
             }
         }
+    }
+
+// Busca hacia atrás desde la posición dada hasta encontrar VAR o PUNTO_COMA
+    private static boolean hayVarAntes(int desdeIndex) {
+        for (int j = desdeIndex - 1; j >= 0; j--) {
+            String comp = Repositorio.listaTokens.get(j).getLexicalComp();
+            if (TokenTipo.VAR.equals(comp)) {
+                return true;
+            }
+            if (TokenTipo.PUNTO_COMA.equals(comp)) {
+                return false; // cruzó otra sentencia
+            }
+        }
+        return false;
     }
 
     public static void validarTiposEnAsignaciones(List<ErrorLSSL> errores) {

@@ -32,26 +32,41 @@ public class AnalizadorSintactico {
         g.group("valor", "(ENTERO | FLOTANTE | CADENA | CARACTER | BOOLEAN_TRUE | BOOLEAN_FALSE)");
         g.group("tipo_dato", "(TIPO_ENTERO | TIPO_DECIMAL | TIPO_TEXTO | TIPO_CAR | TIPO_LOGICO | TIPO_CORTO)");
 
-        // =====================
-        // REGLAS RECURSIVAS
-        // =====================
         g.loopForFunExecUntilChangeNotDetected(() -> {
+            g.group("decl_parcial", "VAR tipo_dato IDENTIFICADOR COMA IDENTIFICADOR");
+            g.group("decl_parcial", "decl_parcial COMA IDENTIFICADOR");
+        });
 
-            // PASO 1: DECLARACIONES (básica)
-            g.group("declaracion", "VAR tipo_dato IDENTIFICADOR (COMA IDENTIFICADOR)* PUNTO_COMA");
+        g.group("declaracion_multi", "decl_parcial PUNTO_COMA");
+        g.group("declaracion_multi", "decl_parcial", true, 3,
+                "Error sintáctico: falta ';' al final de la declaración múltiple");
 
-            // ERROR: Dos identificadores seguidos sin coma
-            g.group("declaracion", "VAR tipo_dato IDENTIFICADOR IDENTIFICADOR PUNTO_COMA", true, 11,
-                    "Error sintáctico: Se esperaba una coma ',' entre los identificadores '"
-                    + "#{IDENTIFICADOR[0]}" + "' y '" + "#{IDENTIFICADOR[1]}" + "'");
+        g.loopForFunExecUntilChangeNotDetected(() -> {
+            // Declaración simple
+            g.group("declaracion", "VAR tipo_dato IDENTIFICADOR PUNTO_COMA");
+            // Declaración múltiple ya resuelta
+            g.group("declaracion", "declaracion_multi");
+
+            // ── ERRORES SINTÁCTICOS ────────────────────────────────────
+            // Falta el punto y coma
+            g.group("declaracion", "VAR tipo_dato IDENTIFICADOR", true, 3,
+                    "Error sintáctico [línea #{IDENTIFICADOR[0]}]: falta ';' al final de la declaración");
+
+            g.group("declaracion", "VAR tipo_dato lista_ids", true, 3,
+                    "Error sintáctico: falta ';' al final de la declaración múltiple");
+
+            // Falta el tipo de dato
+            g.group("declaracion", "VAR IDENTIFICADOR PUNTO_COMA", true, 2,
+                    "Error sintáctico: falta el tipo de dato después de 'var'");
+
+            // Dos tipos seguidos
+            g.group("declaracion", "VAR tipo_dato tipo_dato", true, 3,
+                    "Error sintáctico: se esperaba un identificador, no otro tipo de dato");
 
             // PASO 2: EXPRESIONES
             g.group("factor", "(PAREN_IZQ expresion PAREN_DER | IDENTIFICADOR | valor)");
             g.group("termino", "factor ((MULTIPLICACION | DIVISION | MODULO) factor)*");
             g.group("expresion", "termino ((SUMA | RESTA | CONCAT) termino)*");
-
-            // Declaración con inicialización
-            g.group("declaracion", "VAR tipo_dato IDENTIFICADOR ASIGNACION expresion PUNTO_COMA");
 
             // Errores de declaración
             g.group("declaracion", "VAR tipo_dato IDENTIFICADOR ASIGNACION expresion", true, 3,
@@ -340,6 +355,8 @@ public class AnalizadorSintactico {
         // ============================================================
         g.group("bloque", "LLAVE_IZQ lista_sentencias LLAVE_DER");
         g.group("bloque", "LLAVE_IZQ LLAVE_DER");
+        g.group("lista_declaraciones", "declaracion declaracion*");
+
         g.group("programa", "INICIO bloque FIN");
 
         // Errores INICIO / FIN
