@@ -1,10 +1,9 @@
-package code;
+package code.editor;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Shape;
-import javax.swing.JTextPane;
 import javax.swing.text.*;
 
 public class ErrorLine implements Highlighter.HighlightPainter {

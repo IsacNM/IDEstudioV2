@@ -1,13 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
-package code;
+package code.semantico;
 
-/**
- *
- * @author Diego-CT
- */
 public class Simbolo {
     private String ident;          // Nombre de la variable
     private String tipoDato;       // TIPO_ENTERO, TIPO_DECIMAL, etc.

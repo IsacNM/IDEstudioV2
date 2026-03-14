@@ -1,5 +1,6 @@
-package code;
+package code.sintactico;
 
+import code.semantico.Repositorio;
 import compilerTools.Grammar;
 import compilerTools.Token;
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public class AnalizadorSintactico {
     }
 
     public void ejecutar() {
-        System.out.println("---- Ejecutando sintáctico ----");
+        System.out.println("Ejecutando sintáctico:");
         ArrayList<Token> lista = new ArrayList<>();
         for (Token t : tokens) {
             if (!"ERROR".equals(t.getLexicalComp())) {
@@ -389,31 +390,5 @@ public class AnalizadorSintactico {
                 "Error sintáctico: El código debe estar dentro de la estructura 'INICIO { } FIN'");
 
         g.show();
-    }
-
-    private ArrayList<Token> filtrarParentesisEnAsignaciones(ArrayList<Token> tokens) {
-        ArrayList<Token> resultado = new ArrayList<>();
-        boolean dentroDeAsignacion = false;
-
-        for (int i = 0; i < tokens.size(); i++) {
-            Token t = tokens.get(i);
-
-            if ("ASIGNACION".equals(t.getLexicalComp())) {
-                dentroDeAsignacion = true;
-                resultado.add(t);
-                continue;
-            }
-            if ("PUNTO_COMA".equals(t.getLexicalComp())) {
-                dentroDeAsignacion = false;
-                resultado.add(t);
-                continue;
-            }
-            if (dentroDeAsignacion
-                    && ("PAREN_IZQ".equals(t.getLexicalComp()) || "PAREN_DER".equals(t.getLexicalComp()))) {
-                continue;
-            }
-            resultado.add(t);
-        }
-        return resultado;
     }
 }

@@ -5,8 +5,9 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import javax.swing.table.DefaultTableModel;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import code.lexico.AnalizadorLexico;
 
-public class compilar {
+public class Compilar {
     public static ArrayList<Token> listaTokens = new ArrayList<>();
 
 

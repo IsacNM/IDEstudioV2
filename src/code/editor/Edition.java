@@ -1,4 +1,4 @@
-package code;
+package code.editor;
 
 import javax.swing.JTabbedPane;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;

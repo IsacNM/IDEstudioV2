@@ -1,5 +1,6 @@
-package code;
+package code.sintactico;
 
+import code.semantico.Repositorio;
 import compilerTools.Token;
 import java.util.ArrayList;
 

@@ -1,4 +1,4 @@
-package code;
+package code.utils;
 
 import java.awt.Rectangle;
 import java.awt.event.KeyAdapter;
@@ -10,9 +10,7 @@ import java.util.List;
 import javax.swing.JList;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.JTextComponent;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 
 public class AutoCompletadoPopUp {
@@ -143,16 +141,13 @@ public class AutoCompletadoPopUp {
 
             String prefijo = texto.substring(i + 1);
 
-            // Si no hay texto, ocultamos el popup
             if (prefijo.isEmpty()) {
                 popup.setVisible(false);
                 return;
             }
 
-            // --- LÓGICA DE FILTRADO ---
             List<String> filtradas = new ArrayList<>();
             for (String p : palabras) {
-                // Filtra ignorando mayúsculas/minúsculas
                 if (p.toLowerCase().startsWith(prefijo.toLowerCase())) {
                     filtradas.add(p);
                 }
@@ -163,15 +158,13 @@ public class AutoCompletadoPopUp {
                 return;
             }
 
-            // Actualizamos la lista con las coincidencias
             list.setListData(filtradas.toArray(new String[0]));
             list.setSelectedIndex(0);
 
-            // Posicionamiento del Popup debajo del cursor
             Rectangle r = editor.modelToView(pos);
             if (r != null) {
                 popup.show(editor, r.x, r.y + r.height);
-                editor.requestFocusInWindow(); // Mantiene el foco en el editor para seguir escribiendo
+                editor.requestFocusInWindow();
             }
 
         } catch (BadLocationException ex) {
@@ -196,7 +189,6 @@ public class AutoCompletadoPopUp {
 
             int inicio = i + 1;
 
-            // Reemplazar palabra por la sugerencia
             editor.getDocument().remove(inicio, pos - inicio);
             editor.getDocument().insertString(inicio, seleccionada, null);
 

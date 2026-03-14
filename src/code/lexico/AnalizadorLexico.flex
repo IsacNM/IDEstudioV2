@@ -1,4 +1,4 @@
-package code;
+package code.lexico;
 
 import compilerTools.Token;
 import java.util.List;
@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 %%
 %class AnalizadorLexico
+%public
 %type Token
 %line
 %ignorecase
