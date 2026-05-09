@@ -18,7 +18,6 @@ public class TablaSimbolos {
     public static void construir() {
         for (int i = 0; i < Repositorio.listaTokens.size(); i++) {
             Token token = Repositorio.listaTokens.get(i);
-
             if (!TokenTipo.VAR.equals(token.getLexicalComp())) continue;
 
             i++;
@@ -30,15 +29,16 @@ public class TablaSimbolos {
 
             while (i < Repositorio.listaTokens.size()) {
                 Token t = Repositorio.listaTokens.get(i);
-
                 if (TokenTipo.PUNTO_COMA.equals(t.getLexicalComp())) break;
 
                 if (TokenTipo.IDENTIFICADOR.equals(t.getLexicalComp())) {
                     registrarVariable(t, tipo, valorDefault, i);
 
+                    // En `var T a, b := 5, c;` saltar la expresión hasta la
+                    // siguiente COMA o ';' para no consumir variables aún
+                    // no registradas.
                     if (TokenUtils.tokenEn(i + 1, TokenTipo.ASIGNACION)) {
-                        i += 2;
-                        i = TokenUtils.indiceSiguiente(i, TokenTipo.PUNTO_COMA) - 1;
+                        i = indiceFinExpresionDecl(i + 2) - 1;
                     }
                 }
                 i++;
@@ -46,20 +46,28 @@ public class TablaSimbolos {
         }
     }
 
+    /** Índice del siguiente COMA o PUNTO_COMA desde {@code desde}. */
+    private static int indiceFinExpresionDecl(int desde) {
+        for (int j = desde; j < Repositorio.listaTokens.size(); j++) {
+            String comp = Repositorio.listaTokens.get(j).getLexicalComp();
+            if (TokenTipo.COMA.equals(comp) || TokenTipo.PUNTO_COMA.equals(comp)) return j;
+        }
+        return Repositorio.listaTokens.size();
+    }
+
     private static void registrarVariable(Token t, String tipo, String valorDefault, int pos) {
         String nombreVar = t.getLexeme();
 
         if (Repositorio.tablaSimbolos.containsKey(nombreVar)) {
             Repositorio.listaErrores.add(new ErrorLSSL(
-                ErrorSemantico.VAR_NO_DECLARADA.id,
+                ErrorSemantico.VAR_DUPLICADA.id,
                 "Error semántico: La variable '" + nombreVar + "' ya fue declarada anteriormente.",
-                t
-            ));
+                t));
             return;
         }
 
         String valorInicial = TokenUtils.tokenEn(pos + 1, TokenTipo.ASIGNACION)
-            ? ProcesadorAsignaciones.evaluarExpresion(pos + 2)
+            ? ProcesadorAsignaciones.evaluarExpresion(pos + 2, true)
             : valorDefault;
 
         Simbolo simbolo = new Simbolo();

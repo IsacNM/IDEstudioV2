@@ -23,33 +23,44 @@ public class ProcesadorAsignaciones {
                 }
             }
 
-            i = TokenUtils.indiceSiguiente(i + 2, TokenTipo.PUNTO_COMA);
+            int siguientePuntoComa = TokenUtils.indiceSiguiente(i + 2, TokenTipo.PUNTO_COMA);
+            if (siguientePuntoComa < 0) break;
+            i = siguientePuntoComa;
         }
     }
 
     public static void validarSentenciasLeer() {
         for (int i = 0; i < Repositorio.listaTokens.size(); i++) {
             Token token = Repositorio.listaTokens.get(i);
-
             if (!TokenTipo.LEER.equals(token.getLexicalComp())) continue;
             if (!TokenUtils.tokenEn(i + 2, TokenTipo.IDENTIFICADOR)) continue;
 
             Token tokenInterno = Repositorio.listaTokens.get(i + 2);
-
             if (!Repositorio.tablaSimbolos.containsKey(tokenInterno.getLexeme())) {
                 Repositorio.listaErrores.add(new ErrorLSSL(
                     ErrorSemantico.VAR_NO_INICIALIZADA.id,
                     "Error semántico: La variable '" + tokenInterno.getLexeme() + "' no ha sido declarada.",
-                    tokenInterno
-                ));
+                    tokenInterno));
             }
         }
     }
 
     public static String evaluarExpresion(int inicio) {
-        List<String> expresion = new ArrayList<>();
+        return evaluarExpresion(inicio, false);
+    }
 
-        for (Token t : TokenUtils.extraerHastaDelimitador(inicio)) {
+    /**
+     * Evalúa la expresión que comienza en {@code inicio}.
+     * Si {@code soloHastaCom} es true, corta también en COMA (útil para
+     * inicializadores en declaraciones múltiples).
+     */
+    public static String evaluarExpresion(int inicio, boolean soloHastaCom) {
+        List<Token> tokensExpr = soloHastaCom
+            ? extraerHastaComaOPuntoComa(inicio)
+            : TokenUtils.extraerHastaDelimitador(inicio);
+
+        List<String> expresion = new ArrayList<>();
+        for (Token t : tokensExpr) {
             if (TokenTipo.IDENTIFICADOR.equals(t.getLexicalComp())) {
                 if (Repositorio.tablaSimbolos.containsKey(t.getLexeme())) {
                     expresion.add(Repositorio.tablaSimbolos.get(t.getLexeme()).getValor());
@@ -57,8 +68,7 @@ public class ProcesadorAsignaciones {
                     Repositorio.listaErrores.add(new ErrorLSSL(
                         ErrorSemantico.OPERACION_INVALIDA.id,
                         "Error semántico: La variable '" + t.getLexeme() + "' no ha sido declarada.",
-                        t
-                    ));
+                        t));
                     expresion.add("0");
                 }
             } else {
@@ -67,12 +77,21 @@ public class ProcesadorAsignaciones {
             }
         }
 
-        if (expresion.isEmpty()) return "0";
-        if (expresion.size() == 1) return expresion.get(0);
-
+        if (expresion.isEmpty())     return "0";
+        if (expresion.size() == 1)   return expresion.get(0);
         return EvaluadorExpresiones.evaluarPostfija(
-            EvaluadorExpresiones.infijaAPostfija(new ArrayList<>(expresion))
-        );
+                EvaluadorExpresiones.infijaAPostfija(new ArrayList<>(expresion)));
+    }
+
+    private static List<Token> extraerHastaComaOPuntoComa(int inicio) {
+        List<Token> seg = new ArrayList<>();
+        for (int i = inicio; i < Repositorio.listaTokens.size(); i++) {
+            Token t = Repositorio.listaTokens.get(i);
+            String comp = t.getLexicalComp();
+            if (TokenTipo.COMA.equals(comp) || TokenTipo.PUNTO_COMA.equals(comp)) break;
+            seg.add(t);
+        }
+        return seg;
     }
 
     private static boolean tieneErrorDeTipo(String nombreVar, int posAsignacion) {
@@ -87,9 +106,7 @@ public class ProcesadorAsignaciones {
             if (TokenTipo.IDENTIFICADOR.equals(tk.getLexicalComp())
                     && Repositorio.tablaSimbolos.containsKey(tk.getLexeme())) {
                 if (TokenTipo.TIPO_DECIMAL.equals(
-                        Repositorio.tablaSimbolos.get(tk.getLexeme()).getTipoDato())) {
-                    return true;
-                }
+                        Repositorio.tablaSimbolos.get(tk.getLexeme()).getTipoDato())) return true;
             }
         }
         return false;

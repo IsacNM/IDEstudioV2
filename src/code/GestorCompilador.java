@@ -1,13 +1,20 @@
 package code;
 
-import code.semantico.Simbolo;
-import code.semantico.FiltroParentesis;
-import code.sintactico.AnalizadorSintactico;
-import code.semantico.AnalizadorSemantico;
 import static code.editor.File.errorTab;
+import code.intermedio.Generador3D;
+import code.intermedio.GeneradorCodigoIntermedio;
+import code.semantico.AnalizadorSemantico;
+import code.semantico.FiltroParentesis;
 import code.semantico.Repositorio;
+import code.semantico.Simbolo;
+import code.semantico.TokenTipo;
+import code.sintactico.AnalizadorSintactico;
 import compilerTools.ErrorLSSL;
 import compilerTools.Token;
+import java.util.IdentityHashMap;
+import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -17,145 +24,168 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 public class GestorCompilador {
 
-    public static void ejecutarCompilacion(JTabbedPane jTabbed, DefaultTableModel modeloTabla, JTextArea consola, JTable tablaSimbolos) {
+    private static final Logger LOG = Logger.getLogger(GestorCompilador.class.getName());
+
+    private static final String SEPARADOR =
+            "════════════════════════════════════════════════════════════════════════════════\n";
+    private static final String DIVISOR =
+            "───────────────────────────────────────────────────\n";
+
+    public static void ejecutarCompilacion(JTabbedPane jTabbed, DefaultTableModel modeloTabla,
+                                           JTextArea consola, JTable tablaSimbolos) {
         RTextScrollPane sp = (RTextScrollPane) jTabbed.getSelectedComponent();
-        if (sp == null) {
-            return;
-        }
+        if (sp == null) return;
         RSyntaxTextArea textArea = (RSyntaxTextArea) sp.getViewport().getView();
 
-        // 1. Limpiar todo antes de empezar
         Repositorio.limpiar();
         textArea.getHighlighter().removeAllHighlights();
         consola.setText("");
 
-        // 2. Análisis Léxico
+        // 1. Léxico (Compilar.listaTokens conserva ERROR para el reporte)
         Compilar.analizar(textArea, modeloTabla);
-        Repositorio.listaTokens.addAll(Compilar.listaTokens);
-
-        // Validar si no hay tokens
-        if (Repositorio.listaTokens.isEmpty()) {
-            consola.append("═══════════════════════════════════════════════════\n");
-            consola.append("    ⚠ ERROR DE COMPILACIÓN\n");
-            consola.append("═══════════════════════════════════════════════════\n\n");
-            consola.append("Error sintáctico: Se esperaba la estructura completa del programa con 'INICIO' y 'FIN'\n");
-            return;
+        for (Token t : Compilar.listaTokens) {
+            if (!TokenTipo.ERROR.equals(t.getLexicalComp())) Repositorio.listaTokens.add(t);
         }
 
-        // 3. Análisis Sintáctico (Llena listaErrores con fallos de gramática)
-        AnalizadorSintactico sint = new AnalizadorSintactico(Repositorio.listaTokens);
-        sint.ejecutar();
+        // 2. Sintáctico
+        new AnalizadorSintactico(Repositorio.listaTokens).ejecutar();
 
-        // 4. Análisis Semántico (Llena listaErrores con fallos de lógica)
+        // 3. Semántico
         AnalizadorSemantico.construirTablaSimbolos();
         AnalizadorSemantico.procesarAsignaciones();
         AnalizadorSemantico.validarSentenciasLeer();
-        AnalizadorSemantico.validarSemantica(); // <--- Esta es la nueva llamada que creamos
+        AnalizadorSemantico.validarSemantica();
 
-        // 5. MOSTRAR RESULTADOS EN LA INTERFAZ
+        // 4. UI: tabla y resaltado de líneas con error
         mostrarTablaSimbolos(tablaSimbolos);
+        for (ErrorLSSL error : Repositorio.listaErrores) errorTab(jTabbed, error.getLine());
 
-        // 6. PINTAR LÍNEAS ROJAS
-        // Como unificamos todo en Repositorio.listaErrores, este ciclo 
-        // marcará tanto errores de punto y coma como de variables no declaradas.
-        if (!Repositorio.listaErrores.isEmpty()) {
-            for (ErrorLSSL error : Repositorio.listaErrores) {
-                // Mandamos llamar a tu método que pone el color rojo en el editor
-                errorTab(jTabbed, error.getLine());
-            }
+        // 5. Reporte en consola
+        mostrarErroresEnConsola(consola);
+
+        // 6. Generación 3D si todo está limpio
+        if (compilacionLimpia()) generarIntermedio(sp, jTabbed, consola);
+    }
+
+    // ── Helpers de estado ────────────────────────────────────────────────
+
+    private static boolean compilacionLimpia() {
+        return Repositorio.listaErrores.isEmpty()
+            && !Compilar.hayErroresLexicos()
+            && FiltroParentesis.erroresEncontrados.isEmpty();
+    }
+
+    private static String rutaArchivoActual(RTextScrollPane sp, JTabbedPane jTabbed) {
+        String ruta = (String) sp.getClientProperty("archivo_ruta");
+        if (ruta != null) return ruta;
+        return (String) jTabbed.getClientProperty("ruta_" + jTabbed.getSelectedIndex());
+    }
+
+    // ── Generación de código intermedio ──────────────────────────────────
+
+    private static void generarIntermedio(RTextScrollPane sp, JTabbedPane jTabbed, JTextArea consola) {
+        String ruta = rutaArchivoActual(sp, jTabbed);
+        if (ruta == null) {
+            consola.append("\n[Info]: Guarda el archivo (.id) primero para generar el código intermedio (.3d)\n");
+            return;
         }
 
-        // 7. Imprimir los mensajes detallados en la consola
-        mostrarErroresEnConsola(consola);
+        try {
+            Generador3D gen3D = new Generador3D();
+            gen3D.inicializar();
+            gen3D.crearArchivo(ruta);
+            new GeneradorCodigoIntermedio(gen3D).generar(TokenTipo.FIN);
+            gen3D.cerrar();
+
+            consola.append("\n" + SEPARADOR);
+            consola.append("                      ✓ CÓDIGO INTERMEDIO GENERADO\n");
+            consola.append(SEPARADOR);
+            consola.append("Archivo .3d: " + Generador3D.obtenerRuta3D(ruta) + "\n");
+        } catch (Exception e) {
+            consola.append("\n[Error al generar código intermedio]: " + e.getMessage() + "\n");
+            LOG.log(Level.SEVERE, "Error al generar código intermedio", e);
+        }
     }
+
+    // ── Reporte de errores en consola ────────────────────────────────────
 
     private static void mostrarErroresEnConsola(JTextArea consola) {
-        boolean hayErroresLexicos = false;
-        for (Token t : Repositorio.listaTokens) {
-            if ("ERROR".equals(t.getLexicalComp())) {
-                hayErroresLexicos = true;
-                break;
-            }
+        boolean lex = Compilar.hayErroresLexicos();
+        boolean paren = !FiltroParentesis.erroresEncontrados.isEmpty();
+
+        if (Repositorio.listaErrores.isEmpty() && !lex && !paren) {
+            consola.append(SEPARADOR);
+            consola.append("                               ✓ COMPILACIÓN EXITOSA\n");
+            consola.append(SEPARADOR);
+            consola.append("No se encontraron errores.\n");
+            return;
         }
 
-        boolean hayErroresParentesis = !FiltroParentesis.erroresEncontrados.isEmpty();
+        consola.append(SEPARADOR);
+        consola.append("                   ⚠ ERRORES DETECTADOS EN LA COMPILACIÓN\n");
+        consola.append(SEPARADOR + "\n");
 
-        if (Repositorio.listaErrores.isEmpty() && !hayErroresLexicos && !hayErroresParentesis) {
-            consola.append("════════════════════════════════════════════════════════════════════════════════\n");
-            consola.append("                               ✓ COMPILACIÓN EXITOSA\n");
-            consola.append("════════════════════════════════════════════════════════════════════════════════\n");
-            consola.append("No se encontraron errores.\n");
-        } else {
-            consola.append("════════════════════════════════════════════════════════════════════════════════\n");
-            consola.append("                   ⚠ ERRORES DETECTADOS EN LA COMPILACIÓN\n");
-            consola.append("════════════════════════════════════════════════════════════════════════════════\n\n");
+        if (lex) reportarErroresLexicos(consola);
+        if (!Repositorio.listaErrores.isEmpty()) reportarErroresEstructuraLogica(consola);
+        if (paren) reportarErroresParentesis(consola);
 
-            // 1. Mostrar Errores Léxicos
-            if (hayErroresLexicos) {
-                consola.append("--- ERRORES LÉXICOS ---\n\n");
-                for (Token t : Repositorio.listaTokens) {
-                    if ("ERROR".equals(t.getLexicalComp())) {
-                        consola.append(String.format("Línea %d, Columna %d\n", t.getLine(), t.getColumn()));
-                        consola.append("  ➤ Error léxico: Símbolo no reconocido '" + t.getLexeme() + "'\n");
-                        consola.append("───────────────────────────────────────────────────\n");
-                    }
-                }
-            }
+        consola.append("\nCompilación finalizada con errores.\n");
+    }
 
-            // 2. Mostrar Errores de Estructura y Lógica (Sintáctico + Semántico)
-            if (!Repositorio.listaErrores.isEmpty()) {
-                consola.append("--- ERRORES DE ESTRUCTURA Y LÓGICA ---\n\n");
-
-                // FILTRO DE DUPLICADOS: Usamos un Set para no repetir el mismo mensaje en la misma línea
-                java.util.HashSet<String> erroresVistos = new java.util.HashSet<>();
-                int contadorReal = 1;
-
-                for (ErrorLSSL error : Repositorio.listaErrores) {
-                    // Creamos una "llave" única para identificar si el error ya se mostró
-                    String llaveError = error.getLine() + "|" + error.toString();
-
-                    if (!erroresVistos.contains(llaveError)) {
-                        consola.append(String.format("[Error %d]\n", contadorReal++));
-                        consola.append("  Línea: " + error.getLine() + ", Columna: " + error.getColumn() + "\n");
-                        consola.append("  Detalle: " + error.toString() + "\n");
-                        consola.append("───────────────────────────────────────────────────\n");
-
-                        erroresVistos.add(llaveError); // Lo marcamos como visto
-                    }
-                }
-            }
-
-            // 3. Mostrar Errores de Paréntesis
-            if (hayErroresParentesis) {
-                consola.append("--- ERRORES DE PARÉNTESIS ---\n\n");
-                for (String error : FiltroParentesis.erroresEncontrados) {
-                    consola.append("  ➤ " + error + "\n");
-                    consola.append("───────────────────────────────────────────────────\n");
-                }
-            }
-
-            // Cálculo del total (solo errores únicos)
-            consola.append("\nCompilación finalizada con errores.\n");
+    private static void reportarErroresLexicos(JTextArea consola) {
+        consola.append("--- ERRORES LÉXICOS ---\n\n");
+        for (Token t : Compilar.listaTokens) {
+            if (!TokenTipo.ERROR.equals(t.getLexicalComp())) continue;
+            consola.append(String.format("Línea %d, Columna %d%n", t.getLine(), t.getColumn()));
+            consola.append("  ➤ Error léxico: Símbolo no reconocido '" + t.getLexeme() + "'\n");
+            consola.append(DIVISOR);
         }
     }
 
-// Método para mostrar símbolos
+    private static void reportarErroresEstructuraLogica(JTextArea consola) {
+        IdentityHashMap<ErrorLSSL, Boolean> esParen = new IdentityHashMap<>();
+        for (ErrorLSSL e : FiltroParentesis.erroresEncontrados) esParen.put(e, true);
+
+        HashSet<String> vistos = new HashSet<>();
+        int contador = 1;
+        boolean encabezado = false;
+
+        for (ErrorLSSL error : Repositorio.listaErrores) {
+            if (esParen.containsKey(error)) continue;
+
+            String llave = error.getLine() + "|" + error.toString();
+            if (vistos.contains(llave)) continue;
+
+            if (!encabezado) {
+                consola.append("--- ERRORES DE ESTRUCTURA Y LÓGICA ---\n\n");
+                encabezado = true;
+            }
+            consola.append(String.format("[Error %d]%n", contador++));
+            consola.append("  Línea: " + error.getLine() + ", Columna: " + error.getColumn() + "\n");
+            consola.append("  Detalle: " + error.toString() + "\n");
+            consola.append(DIVISOR);
+            vistos.add(llave);
+        }
+    }
+
+    private static void reportarErroresParentesis(JTextArea consola) {
+        consola.append("--- ERRORES DE PARÉNTESIS ---\n\n");
+        for (ErrorLSSL error : FiltroParentesis.erroresEncontrados) {
+            consola.append("  Línea: " + error.getLine() + ", Columna: " + error.getColumn() + "\n");
+            consola.append("  ➤ " + error.toString() + "\n");
+            consola.append(DIVISOR);
+        }
+    }
+
+    // ── Tabla de símbolos ────────────────────────────────────────────────
+
     private static void mostrarTablaSimbolos(JTable tabla) {
         DefaultTableModel modelo = (DefaultTableModel) tabla.getModel();
-
-        // Limpiar tabla antes de llenarla
         modelo.setRowCount(0);
-
-        // Llenar con los símbolos del repositorio
-        for (Simbolo simbolo : Repositorio.tablaSimbolos.values()) {
-            Object[] fila = new Object[]{
-                simbolo.getIdent(),
-                simbolo.getTipoDato(),
-                simbolo.getValor(),
-                simbolo.getVarConstParam()
-            };
-            modelo.addRow(fila);
+        for (Simbolo s : Repositorio.tablaSimbolos.values()) {
+            modelo.addRow(new Object[]{
+                s.getIdent(), s.getTipoDato(), s.getValor(), s.getVarConstParam()
+            });
         }
     }
-
 }
