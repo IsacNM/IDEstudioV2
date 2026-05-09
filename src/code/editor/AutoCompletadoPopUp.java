@@ -6,14 +6,39 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JList;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.text.BadLocationException;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 
+/**
+ * Popup de autocompletado con soporte de snippets:
+ *  - Mientras se escribe se sugieren palabras reservadas.
+ *  - Al confirmar (Enter o Tab) si la palabra tiene plantilla asociada
+ *    se expande a la estructura completa y el caret se posiciona en el
+ *    primer "hueco" marcado por «|».
+ *  - Si no hay plantilla, se inserta la palabra tal cual (comportamiento
+ *    anterior).
+ *
+ *  Las plantillas usan «|» como marcador de posición del caret y se
+ *  reindentan automáticamente respetando la indentación de la línea
+ *  donde se invoca el snippet.
+ */
 public class AutoCompletadoPopUp {
+
+    private static final Logger LOG = Logger.getLogger(AutoCompletadoPopUp.class.getName());
+
+    /** Marcador de posición del caret dentro de un snippet. */
+    private static final String CURSOR = "|";
+
+    /** Indentación de un nivel anidado (4 espacios). */
+    private static final String INDENT = "    ";
 
     private final RSyntaxTextArea editor;
     private final JPopupMenu popup;
@@ -21,16 +46,77 @@ public class AutoCompletadoPopUp {
     private final JScrollPane scroll;
     private final List<String> palabras;
 
-    public static String[] palabrasReservadas = {
-        "inicio", "fin",
-        "si", "sino",
-        "elige", "caso", "romper", "defecto",
-        "isac", "Diego", "repite", "hasta",
-        "mostrar", "leer",
-        "var", "const",
-        "entero", "decimal", "texto", "car", "logico", "corto",
-        "cierto", "falso"
-    };
+    /** @deprecated usar {@link LanguageKeywords#all()}. Conservado por compat. */
+    @Deprecated
+    public static final String[] palabrasReservadas = LanguageKeywords.all();
+
+    /**
+     * Plantillas para cada palabra que actúa como inicio de estructura.
+     * El marcador {@link #CURSOR} indica dónde queda el caret tras la
+     * expansión. Cada salto de línea es reindentado al insertar.
+     */
+    private static final Map<String, String> SNIPPETS = new HashMap<>();
+    static {
+        // Programa
+        SNIPPETS.put("inicio",
+                "inicio{\n" +
+                INDENT + CURSOR + "\n" +
+                "} fin");
+
+        // Condicionales
+        SNIPPETS.put("si",
+                "si (" + CURSOR + ") {\n" +
+                INDENT + "\n" +
+                "}");
+        SNIPPETS.put("sino",
+                "sino {\n" +
+                INDENT + CURSOR + "\n" +
+                "}");
+
+        // Switch
+        SNIPPETS.put("suich",
+                "suich (" + CURSOR + ") {\n" +
+                INDENT + "caso 1:\n" +
+                INDENT + INDENT + "\n" +
+                INDENT + INDENT + "rompe;\n" +
+                INDENT + "defecto:\n" +
+                INDENT + INDENT + "\n" +
+                INDENT + INDENT + "rompe;\n" +
+                "}");
+        SNIPPETS.put("caso",
+                "caso " + CURSOR + ":\n" +
+                INDENT + "\n" +
+                INDENT + "rompe;");
+        SNIPPETS.put("defecto",
+                "defecto:\n" +
+                INDENT + CURSOR + "\n" +
+                INDENT + "rompe;");
+
+        // Bucles
+        SNIPPETS.put("isac",                                  // for
+                "isac (i := 1; i <= " + CURSOR + "; ++>i) {\n" +
+                INDENT + "\n" +
+                "}");
+        SNIPPETS.put("diego",                                 // while
+                "diego (" + CURSOR + ") {\n" +
+                INDENT + "\n" +
+                "}");
+        SNIPPETS.put("repite",                                // do-while
+                "repite {\n" +
+                INDENT + CURSOR + "\n" +
+                "} hasta (cierto);");
+
+        // E/S
+        SNIPPETS.put("mostrar", "mostrar(" + CURSOR + ");");
+        SNIPPETS.put("leer",    "leer(" + CURSOR + ");");
+
+        // Declaraciones rápidas (con tipo predeterminado: entero, ya con
+        // asignación inicial — el patrón más común en los .id existentes).
+        // El caret queda en el nombre; tras escribirlo, el usuario navega
+        // al valor con la flecha derecha o un click.
+        SNIPPETS.put("var",   "var entero " + CURSOR + " := 0;");
+        SNIPPETS.put("const", "const entero " + CURSOR + " := 0;");
+    }
 
     public AutoCompletadoPopUp(RSyntaxTextArea editor, List<String> palabras) {
         this.editor = editor;
@@ -51,7 +137,9 @@ public class AutoCompletadoPopUp {
 
             @Override
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER && popup.isVisible()) {
+                if (popup.isVisible()
+                        && (e.getKeyCode() == KeyEvent.VK_ENTER
+                            || e.getKeyCode() == KeyEvent.VK_TAB)) {
                     insertar();
                     popup.setVisible(false);
                     e.consume();
@@ -99,7 +187,8 @@ public class AutoCompletadoPopUp {
         list.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER
+                        || e.getKeyCode() == KeyEvent.VK_TAB) {
                     insertar();
                     popup.setVisible(false);
                     e.consume();
@@ -168,7 +257,7 @@ public class AutoCompletadoPopUp {
             }
 
         } catch (BadLocationException ex) {
-            ex.printStackTrace();
+            LOG.log(Level.WARNING, "Error al mostrar el popup de autocompletado", ex);
         }
     }
 
@@ -182,18 +271,82 @@ public class AutoCompletadoPopUp {
             int pos = editor.getCaretPosition();
             String texto = editor.getText(0, pos);
 
+            // Encontrar el inicio del prefijo escrito (palabra que se está completando)
             int i = pos - 1;
             while (i >= 0 && Character.isLetterOrDigit(texto.charAt(i))) {
                 i--;
             }
+            int inicioPrefijo = i + 1;
 
-            int inicio = i + 1;
+            String snippet = SNIPPETS.get(seleccionada);
 
-            editor.getDocument().remove(inicio, pos - inicio);
-            editor.getDocument().insertString(inicio, seleccionada, null);
+            if (snippet == null) {
+                // Sin plantilla → simple reemplazo del prefijo (comportamiento clásico)
+                editor.getDocument().remove(inicioPrefijo, pos - inicioPrefijo);
+                editor.getDocument().insertString(inicioPrefijo, seleccionada, null);
+                return;
+            }
+
+            // Calcular indentación de la línea actual (espacios/tabs antes de la palabra)
+            String indent = indentDeLineaActual(texto, inicioPrefijo);
+
+            // Reindentar el snippet: cada salto de línea recibe la indentación base
+            String expandido = aplicarIndent(snippet, indent);
+
+            // Posición del marcador del caret (puede no haber → caret al final)
+            int caretRelativo = expandido.indexOf(CURSOR);
+            if (caretRelativo >= 0) {
+                expandido = expandido.substring(0, caretRelativo)
+                          + expandido.substring(caretRelativo + CURSOR.length());
+            }
+
+            editor.getDocument().remove(inicioPrefijo, pos - inicioPrefijo);
+            editor.getDocument().insertString(inicioPrefijo, expandido, null);
+
+            // Mover el caret
+            int destino = (caretRelativo >= 0)
+                    ? inicioPrefijo + caretRelativo
+                    : inicioPrefijo + expandido.length();
+            editor.setCaretPosition(destino);
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOG.log(Level.WARNING, "Error al insertar snippet de autocompletado", ex);
         }
+    }
+
+    /**
+     * Indentación (espacios o tabs) de la línea que contiene la posición
+     * dada. Útil para reindentar las líneas adicionales del snippet.
+     */
+    private static String indentDeLineaActual(String texto, int posEnLinea) {
+        // Ir hacia atrás hasta el último '\n' (o al inicio)
+        int inicioLinea = posEnLinea;
+        while (inicioLinea > 0 && texto.charAt(inicioLinea - 1) != '\n') {
+            inicioLinea--;
+        }
+        // Tomar los caracteres en blanco al inicio de la línea
+        int j = inicioLinea;
+        while (j < texto.length()
+                && (texto.charAt(j) == ' ' || texto.charAt(j) == '\t')) {
+            j++;
+        }
+        return texto.substring(inicioLinea, j);
+    }
+
+    /**
+     * Aplica la indentación base a cada línea del snippet excepto la
+     * primera (la primera ya está en la columna correcta del editor).
+     */
+    private static String aplicarIndent(String snippet, String indent) {
+        if (indent.isEmpty()) return snippet;
+        StringBuilder out = new StringBuilder(snippet.length() + 32);
+        String[] lineas = snippet.split("\n", -1);
+        for (int i = 0; i < lineas.length; i++) {
+            if (i > 0) {
+                out.append('\n').append(indent);
+            }
+            out.append(lineas[i]);
+        }
+        return out.toString();
     }
 }

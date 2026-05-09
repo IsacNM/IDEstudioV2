@@ -5,20 +5,29 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JLabel;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 
 public class Editor {
 
+    static {
+        // Registrar el TokenMaker custom de IDEstudio una sola vez (idempotente)
+        // antes de crear cualquier editor.
+        IDEstudioTokenMaker.registrar();
+    }
+
     public static RSyntaxTextArea createEditor(JLabel positionLabel) {
         RSyntaxTextArea textArea = new RSyntaxTextArea();
-        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
+        textArea.setSyntaxEditingStyle(IDEstudioTokenMaker.SYNTAX_STYLE);
         textArea.setCodeFoldingEnabled(true);
         textArea.setCurrentLineHighlightColor(new Color(230, 240, 255));
         textArea.setHighlightCurrentLine(true);
 
+        // Aplicar tema persistido por usuario (~/.idestudio/config.properties):
+        // fuente, tamaño, estilo y colores por tipo de token.
+        EditorTema.aplicar(textArea);
+
         // Configuración de Autocompletado
-        List<String> sugerencias = new ArrayList<>(List.of(code.editor.AutoCompletadoPopUp.palabrasReservadas));
-        new code.editor.AutoCompletadoPopUp(textArea, sugerencias);
+        List<String> sugerencias = new ArrayList<>(List.of(LanguageKeywords.all()));
+        new AutoCompletadoPopUp(textArea, sugerencias);
 
         // Listener de posición
         textArea.addCaretListener(e -> Position.actualizarPosicionPuntero(textArea, positionLabel));

@@ -1,13 +1,13 @@
 package view;
 
-import code.Edition;
-import code.TIme;
-import code.File;
-import code.Position;
+import code.editor.Edition;
+import code.editor.Time;
+import code.editor.File;
+import code.GestorCompilador;
+import code.editor.Position;
 import javax.swing.ImageIcon;
 import javax.swing.table.DefaultTableModel;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.RTextScrollPane;
 
 public class IDE extends javax.swing.JFrame implements Runnable {
 
@@ -17,11 +17,16 @@ public class IDE extends javax.swing.JFrame implements Runnable {
         initComponents();
         setIconImage(new ImageIcon(getClass().getResource("/imgs/iconApp.jpg")).getImage());
 
-        Thread hiloReloj = new Thread(this);
+        // Hilo del reloj: daemon (muere automáticamente al cerrar la JVM)
+        // y se interrumpe en formWindowClosing (ver run()).
+        hiloReloj = new Thread(this, "reloj-IDE");
+        hiloReloj.setDaemon(true);
         hiloReloj.start();
 
         File.newFile(jTabbed, positionLabel);
     }
+
+    private Thread hiloReloj;
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -492,7 +497,7 @@ public class IDE extends javax.swing.JFrame implements Runnable {
     }//GEN-LAST:event_jmenuSalirActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        // TODO add your handling code here:
+        if (hiloReloj != null) hiloReloj.interrupt();
         File.exitApp(jTabbed, jFileChooser);
     }//GEN-LAST:event_formWindowClosing
 
@@ -552,51 +557,64 @@ public class IDE extends javax.swing.JFrame implements Runnable {
     }//GEN-LAST:event_CopiarActionPerformed
 
     private void jTabbedStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedStateChanged
-        // TODO add your handling code here:
-        RTextScrollPane sp = (RTextScrollPane) jTabbed.getSelectedComponent();
-        if (sp != null) {
-            RSyntaxTextArea currentArea = (RSyntaxTextArea) sp.getViewport().getView();
+        RSyntaxTextArea currentArea = File.getTextAreaActual(jTabbed);
+        if (currentArea != null) {
             Position.actualizarPosicionPuntero(currentArea, this.positionLabel);
         }
     }//GEN-LAST:event_jTabbedStateChanged
 
     private void jmenuConfActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jmenuConfActionPerformed
-        // TODO add your handling code here:
-        RTextScrollPane sp = (RTextScrollPane) jTabbed.getSelectedComponent();
-
-        RSyntaxTextArea areaActual = null;
-        if (sp != null) {
-            areaActual = (RSyntaxTextArea) sp.getViewport().getView();
-        }
+        // Abre el diálogo de configuración modal. Al pulsar Aceptar persiste
+        // la config (~/.idestudio/config.properties) y aplica el tema a
+        // todos los editores abiertos.
+        JConfig dialogo = new JConfig(this, true, File.getTextAreaActual(jTabbed), jTabbed);
+        dialogo.setLocationRelativeTo(this);
+        dialogo.setVisible(true);
     }//GEN-LAST:event_jmenuConfActionPerformed
 
     private void ajustes9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ajustes9ActionPerformed
-        // TODO add your handling code here:
-        RTextScrollPane sp = (RTextScrollPane) jTabbed.getSelectedComponent();
-
-        RSyntaxTextArea areaActual = null;
-        if (sp != null) {
-            areaActual = (RSyntaxTextArea) sp.getViewport().getView();
-        }
+        // (placeholder: el botón de ajustes adicional aún no tiene acción)
     }//GEN-LAST:event_ajustes9ActionPerformed
 
     private void ajustes6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ajustes6ActionPerformed
         // TODO add your handling code here:
-File.ejecutarCompilacion(jTabbed, (DefaultTableModel) TablaTokens.getModel(), jTextArea1, tablaSimbolos);
+        GestorCompilador.ejecutarCompilacion(jTabbed, (DefaultTableModel) TablaTokens.getModel(), jTextArea1, tablaSimbolos);
 
     }//GEN-LAST:event_ajustes6ActionPerformed
 
     private void jmenuCompilarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jmenuCompilarActionPerformed
         // TODO add your handling code here:
 
-File.ejecutarCompilacion(jTabbed, (DefaultTableModel) TablaTokens.getModel(), jTextArea1, tablaSimbolos);
+        GestorCompilador.ejecutarCompilacion(jTabbed, (DefaultTableModel) TablaTokens.getModel(), jTextArea1, tablaSimbolos);
 
     }//GEN-LAST:event_jmenuCompilarActionPerformed
 
     private void jmenuCompilaryCorrerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jmenuCompilaryCorrerActionPerformed
-        // TODO add your handling code here:
-        int lineaError = 5;
-        File.errorTab(jTabbed, lineaError);
+        // Compilar y mostrar el código intermedio generado en la consola.
+        // Antes este botón pintaba la línea 5 hardcodeada como error
+        // (resto de prueba). Ahora delega en el GestorCompilador (que se
+        // encarga de pintar las líneas reales con error y emitir el .3d)
+        // y, si la compilación fue limpia, vuelca el .3d a la consola.
+        GestorCompilador.ejecutarCompilacion(
+                jTabbed, (DefaultTableModel) TablaTokens.getModel(),
+                jTextArea1, tablaSimbolos);
+
+        String rutaArchivo = File.getRutaArchivo(jTabbed, jTabbed.getSelectedIndex());
+        if (rutaArchivo == null) return;
+
+        String ruta3D = code.intermedio.Generador3D.obtenerRuta3D(rutaArchivo);
+        java.nio.file.Path p = java.nio.file.Paths.get(ruta3D);
+        if (!java.nio.file.Files.exists(p)) return;
+        try {
+            String contenido = java.nio.file.Files.readString(
+                    p, java.nio.charset.StandardCharsets.UTF_8);
+            jTextArea1.append("\n--- EJECUCIÓN: contenido de " + p.getFileName() + " ---\n");
+            jTextArea1.append(contenido);
+            jTextArea1.append("\n--- fin ejecución ---\n");
+        } catch (java.io.IOException ioe) {
+            logger.log(java.util.logging.Level.WARNING,
+                    "No se pudo leer el archivo .3d generado", ioe);
+        }
     }//GEN-LAST:event_jmenuCompilaryCorrerActionPerformed
 
 
@@ -659,14 +677,14 @@ File.ejecutarCompilacion(jTabbed, (DefaultTableModel) TablaTokens.getModel(), jT
 
     @Override
     public void run() {
-        while (true) {
-            TIme Hora = new TIme();
-            String hora = Hora.calcularHora();
-            timeLabel.setText(hora);
+        while (!Thread.currentThread().isInterrupted()) {
+            String hora = Time.calcularHora();
+            javax.swing.SwingUtilities.invokeLater(() -> timeLabel.setText(hora));
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();   // restaurar flag y salir
+                break;
             }
         }
     }

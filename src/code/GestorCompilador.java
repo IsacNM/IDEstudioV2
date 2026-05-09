@@ -1,5 +1,6 @@
 package code;
 
+import code.editor.File;
 import static code.editor.File.errorTab;
 import code.intermedio.Generador3D;
 import code.intermedio.GeneradorCodigoIntermedio;
@@ -20,7 +21,6 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.table.DefaultTableModel;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rtextarea.RTextScrollPane;
 
 public class GestorCompilador {
 
@@ -33,9 +33,8 @@ public class GestorCompilador {
 
     public static void ejecutarCompilacion(JTabbedPane jTabbed, DefaultTableModel modeloTabla,
                                            JTextArea consola, JTable tablaSimbolos) {
-        RTextScrollPane sp = (RTextScrollPane) jTabbed.getSelectedComponent();
-        if (sp == null) return;
-        RSyntaxTextArea textArea = (RSyntaxTextArea) sp.getViewport().getView();
+        RSyntaxTextArea textArea = File.getTextAreaActual(jTabbed);
+        if (textArea == null) return;
 
         Repositorio.limpiar();
         textArea.getHighlighter().removeAllHighlights();
@@ -64,7 +63,7 @@ public class GestorCompilador {
         mostrarErroresEnConsola(consola);
 
         // 6. Generación 3D si todo está limpio
-        if (compilacionLimpia()) generarIntermedio(sp, jTabbed, consola);
+        if (compilacionLimpia()) generarIntermedio(jTabbed, consola);
     }
 
     // ── Helpers de estado ────────────────────────────────────────────────
@@ -75,16 +74,10 @@ public class GestorCompilador {
             && FiltroParentesis.erroresEncontrados.isEmpty();
     }
 
-    private static String rutaArchivoActual(RTextScrollPane sp, JTabbedPane jTabbed) {
-        String ruta = (String) sp.getClientProperty("archivo_ruta");
-        if (ruta != null) return ruta;
-        return (String) jTabbed.getClientProperty("ruta_" + jTabbed.getSelectedIndex());
-    }
-
     // ── Generación de código intermedio ──────────────────────────────────
 
-    private static void generarIntermedio(RTextScrollPane sp, JTabbedPane jTabbed, JTextArea consola) {
-        String ruta = rutaArchivoActual(sp, jTabbed);
+    private static void generarIntermedio(JTabbedPane jTabbed, JTextArea consola) {
+        String ruta = File.getRutaArchivo(jTabbed, jTabbed.getSelectedIndex());
         if (ruta == null) {
             consola.append("\n[Info]: Guarda el archivo (.id) primero para generar el código intermedio (.3d)\n");
             return;

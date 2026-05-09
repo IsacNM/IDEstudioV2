@@ -10,11 +10,16 @@ import javax.swing.DefaultListModel;
 import javax.swing.JTextPane;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
-import code.ClassArchivoPropiedades;
+import code.editor.ArchivoPropiedades;
+import code.editor.EditorTema;
+import code.editor.LanguageKeywords;
 
 public class JConfig extends javax.swing.JDialog {
 
-    private JTextPane textPane;
+    private static final java.util.logging.Logger LOG =
+            java.util.logging.Logger.getLogger(JConfig.class.getName());
+
+    private javax.swing.text.JTextComponent textPane;
     public String fuenteSeleccionada = null;
     public int tamañoSeleccionado = -1;
     public int estiloSeleccionado = -1;
@@ -25,9 +30,21 @@ public class JConfig extends javax.swing.JDialog {
     private Map<String, Color> temaColores; // <--- Mapa para guardar colores por tema
     private String temaSeleccionado = "General"; // <--- Opción seleccionada actualmente
 
-    public JConfig(java.awt.Frame parent, boolean modal, JTextPane textPane) {
+    /** Tabbed donde están los editores; se usa para aplicar el tema a
+     *  todos al guardar. Puede ser null si JConfig se invoca sin él. */
+    private javax.swing.JTabbedPane tabbedEditores;
+
+    public JConfig(java.awt.Frame parent, boolean modal,
+                   javax.swing.text.JTextComponent textPane) {
+        this(parent, modal, textPane, null);
+    }
+
+    public JConfig(java.awt.Frame parent, boolean modal,
+                   javax.swing.text.JTextComponent textPane,
+                   javax.swing.JTabbedPane tabbedEditores) {
         super(parent, modal);
         this.textPane = textPane;
+        this.tabbedEditores = tabbedEditores;
 
         this.temaColores = new HashMap<>();
         inicializarTemaColores();
@@ -46,8 +63,7 @@ public class JConfig extends javax.swing.JDialog {
 
         copiarDocumentoConEstilos(textPane, txtEjemplo);
 
-        Español.addActionListener(e -> cambiarIdioma("es"));
-        Ingles.addActionListener(e -> cambiarIdioma("en"));
+        // Listeners de idioma se registran en configurarListenersDeVista().
 
         Color colorInicial = temaColores.getOrDefault(temaSeleccionado, Color.BLACK);
         jColorChooser1.setColor(colorInicial);
@@ -58,16 +74,9 @@ public class JConfig extends javax.swing.JDialog {
         actualizarPreviewSintaxis();
     }
 
-    public static String[] palabrasReservadas = {
-        "inicio", "fin",
-        "si", "sino",
-        "elige", "caso", "romper", "defecto",
-        "isac", "Diego", "repite", "hasta",
-        "mostrar", "leer",
-        "var", "const",
-        "entero", "decimal", "texto", "car", "logico", "corto",
-        "cierto", "falso"
-    };
+    /** @deprecated usar {@link LanguageKeywords#all()}. */
+    @Deprecated
+    public static final String[] palabrasReservadas = LanguageKeywords.all();
 
     String[] tokens = {
         // Bloques
@@ -88,9 +97,9 @@ public class JConfig extends javax.swing.JDialog {
         ";", "'", "\"",
         // Estructuras de control
         "si", "sino",
-        "elige", "caso", "romper", "defecto",
+        "suich", "caso", "rompe", "defecto",
         // Ciclos
-        "isac", "Diego", "repite", "hasta",
+        "isac", "diego", "repite", "hasta",
         // E/S
         "mostrar", "leer",
         // Declaración
@@ -102,33 +111,14 @@ public class JConfig extends javax.swing.JDialog {
     };
 
     private void inicializarTemaColores() {
-        // Colores por defecto (si no se encuentran en el archivo)
-        temaColores.put("General", Color.BLACK);
-        temaColores.put("Palabras reservadas", new Color(127, 0, 85));
-        temaColores.put("Comentarios", new Color(63, 127, 95));
-        temaColores.put("Cadenas", Color.BLUE);
-        temaColores.put("Identificadores", Color.BLACK);
-        temaColores.put("Números enteros", Color.RED);
-        temaColores.put("Números flotantes", Color.RED.darker());
-        temaColores.put("Signos de puntuación", Color.GRAY);
+        // Defaults centralizados en EditorTema
+        temaColores.putAll(EditorTema.COLORES_DEFAULT);
 
-        // Cargar colores desde el archivo de propiedades si existen
-        ClassArchivoPropiedades archivoProp = new ClassArchivoPropiedades();
-        Properties prop = archivoProp.LeerPropiedades();
-
-        if (prop != null) {
-            temaColores.keySet().forEach(tema -> {
-                String keyProp = "color_" + tema.replace(" ", "_");
-                String hexColor = prop.getProperty(keyProp);
-                if (hexColor != null && hexColor.startsWith("#")) {
-                    try {
-                        Color color = Color.decode(hexColor);
-                        temaColores.put(tema, color);
-                    } catch (NumberFormatException ignored) {
-                        // Usar el color por defecto si la carga falla
-                    }
-                }
-            });
+        // Override con lo persistido por usuario (si existe)
+        Properties prop = new ArchivoPropiedades().LeerPropiedades();
+        if (prop == null) return;
+        for (String categoria : EditorTema.COLORES_DEFAULT.keySet()) {
+            temaColores.put(categoria, EditorTema.leerColor(prop, categoria));
         }
     }
 
@@ -161,7 +151,7 @@ public class JConfig extends javax.swing.JDialog {
         // 2. Definir patrones (Mismos que en tu interfaz principal)
         // Palabras Reservadas
         String[] reservadas = {
-            "inicio", "fin", "si", "sino", "elige", "caso", "romper",
+            "inicio", "fin", "si", "sino", "suich", "caso", "rompe",
             "defecto", "mostrar", "leer", "var", "const", "entero",
             "decimal", "texto", "cierto", "falso" // Agrega las que uses en el ejemplo
         };
@@ -423,7 +413,22 @@ public class JConfig extends javax.swing.JDialog {
         listaTema.setModel(modelo);
     }
 
-    private void copiarDocumentoConEstilos(JTextPane origen, JTextPane destino) {
+    private void copiarDocumentoConEstilos(javax.swing.text.JTextComponent origenAny, JTextPane destino) {
+        // Si el origen no es JTextPane (p.ej. RSyntaxTextArea), copiamos
+        // sólo el texto plano al panel de ejemplo.
+        if (!(origenAny instanceof JTextPane)) {
+            try {
+                destino.setStyledDocument(new javax.swing.text.DefaultStyledDocument());
+                if (origenAny != null) {
+                    destino.setText(origenAny.getText());
+                }
+            } catch (Exception e) {
+                LOG.log(java.util.logging.Level.WARNING,
+                        "Error al copiar texto al panel de ejemplo", e);
+            }
+            return;
+        }
+        JTextPane origen = (JTextPane) origenAny;
         try {
             destino.setStyledDocument(new javax.swing.text.DefaultStyledDocument());
 
@@ -439,7 +444,8 @@ public class JConfig extends javax.swing.JDialog {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(java.util.logging.Level.WARNING,
+                    "Error al copiar documento con estilos", e);
         }
     }
 
@@ -453,18 +459,15 @@ public class JConfig extends javax.swing.JDialog {
         textPane.setFont(nueva);
 
         // Guardar propiedades en el archivo de configuración
-        ClassArchivoPropiedades archivo = new ClassArchivoPropiedades();
+        ArchivoPropiedades archivo = new ArchivoPropiedades();
         Properties prop = archivo.LeerPropiedades();
         if (prop == null) {
             prop = new Properties(); // si no existe, crear uno nuevo
         }
 
         for (Map.Entry<String, Color> entry : temaColores.entrySet()) {
-            String key = entry.getKey().replace(" ", "_"); // ej: Palabras reservadas -> Palabras_reservadas
-            Color color = entry.getValue();
-            // Convertir a Hex para guardar
-            String colorHex = String.format("#%06X", (0xFFFFFF & color.getRGB()));
-            prop.setProperty("color_" + key, colorHex);
+            prop.setProperty(EditorTema.llaveColor(entry.getKey()),
+                             EditorTema.aHex(entry.getValue()));
         }
 
         prop.setProperty("idioma", idiomaSeleccionado);
@@ -533,6 +536,7 @@ public class JConfig extends javax.swing.JDialog {
         });
 
         Cancelar.setText("Cancelar");
+        Cancelar.addActionListener(e -> dispose());
 
         Ejemplo.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.LOWERED));
 
@@ -872,7 +876,28 @@ public class JConfig extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void AceptarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AceptarActionPerformed
-       
+        // 1) Persistir la configuración a ~/.idestudio/config.properties
+        guardarConfiguracion();
+
+        // 2) Aplicar el tema recién guardado a TODOS los editores abiertos
+        //    (no solo al activo). Si no se pasó tabbedEditores, se omite.
+        if (tabbedEditores != null) {
+            java.util.Properties prop = new code.editor.ArchivoPropiedades().LeerPropiedades();
+            for (int i = 0; i < tabbedEditores.getTabCount(); i++) {
+                java.awt.Component c = tabbedEditores.getComponentAt(i);
+                if (c instanceof org.fife.ui.rtextarea.RTextScrollPane) {
+                    org.fife.ui.rtextarea.RTextScrollPane sp =
+                            (org.fife.ui.rtextarea.RTextScrollPane) c;
+                    java.awt.Component v = sp.getViewport().getView();
+                    if (v instanceof org.fife.ui.rsyntaxtextarea.RSyntaxTextArea) {
+                        code.editor.EditorTema.aplicar(
+                                (org.fife.ui.rsyntaxtextarea.RSyntaxTextArea) v, prop);
+                    }
+                }
+            }
+        }
+
+        dispose();
     }//GEN-LAST:event_AceptarActionPerformed
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
