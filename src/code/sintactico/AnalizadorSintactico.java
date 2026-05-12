@@ -119,31 +119,40 @@ public class AnalizadorSintactico {
 
             // --- 1. EXPRESIONES Y CONDICIONES (Cimientos) ---
             //
-            // NOTA SOBRE EL SOLAPAMIENTO factor/condicion (a propósito):
-            //   `factor` y `condicion` aceptan ambos `PAREN_IZQ ... PAREN_DER`.
-            //   Esto es intencional porque el parser bottom-up no sabe a priori
-            //   si un grupo entre paréntesis es aritmético (`(a+b)`) o lógico
-            //   (`(a > 0)`). Las dos reglas se prueban en cada iteración y la
-            //   que case con el contexto consumidor (asignación, condición de
-            //   if/while/for) es la que se mantiene.
+            // Los paréntesis se reducen SOLO como `factor` (regla única).
+            // Para que `(a :: 0)` siga sirviendo como condicion bajo un
+            // operador lógico, el `LOGICO_NOT` (y los `-y-`/`-o-`) aceptan
+            // explícitamente `factor` como operando.
             //
-            //   Esto solo es seguro mientras todos los nodos consumidores
-            //   ('asig_st', 'if_base', 'while_st', 'for_st', 'switch_st',
-            //   'io_st', 'inc_st') acepten `(expresion | condicion)` como
-            //   alternativa. Si alguien añade una regla que SOLO acepte uno
-            //   de los dos, fallará silenciosamente.
+            // FALLBACK expresion-level (clave para programas reales):
+            //   El motor consume tokens en la primera reducción que matchea.
+            //   Una vez `(i*2+3)` se promueve a `expresion` vía
+            //   factor → termino → expresion, ya no puede reusarse como
+            //   factor para combinarse con `*`/`/` adyacentes. Sin un
+            //   fallback, cadenas como `suma + (i*2+3) - (i%2) * 4` no
+            //   convergen. La regla `expresion → expresion OP expresion`
+            //   rompe esa trampa colapsando la cadena en una sola expresion.
+            //   La precedencia REAL se aplica después en
+            //   {@link EvaluadorExpresiones#infijaAPostfija} y en el
+            //   generador de 3 direcciones — el AST plano no afecta la
+            //   semántica final.
             g.group("factor", "PAREN_IZQ (expresion | condicion) PAREN_DER");
             g.group("factor", "IDENTIFICADOR | valor");
             g.group("termino", "factor (MULTIPLICACION | DIVISION | MODULO) factor");
             g.group("termino", "factor");
             g.group("expresion", "termino (SUMA | RESTA | CONCAT) termino");
             g.group("expresion", "termino");
+            g.group("expresion", "expresion (SUMA | RESTA | CONCAT | MULTIPLICACION | DIVISION | MODULO) expresion");
 
             g.group("condicion_rel", "expresion (OP_MAYOR | OP_MENOR | OP_MAYOR_IGUAL | OP_MENOR_IGUAL | OP_IGUAL_IGUAL | OP_DIFERENTE) expresion");
             g.group("condicion", "condicion_rel | BOOLEAN_TRUE | BOOLEAN_FALSE | IDENTIFICADOR | factor");
-            g.group("condicion", "PAREN_IZQ (condicion | expresion) PAREN_DER");
-            g.group("condicion", "LOGICO_NOT (condicion | expresion)");
-            g.group("condicion", "(condicion | expresion) (LOGICO_AND | LOGICO_OR) (condicion | expresion)");
+            // LOGICO_NOT y los lógicos binarios aceptan factor explícitamente.
+            // Sin `factor` en estos operandos, `-n- (a :: 0)` no reduce: el
+            // motor consume los tokens de `(a :: 0)` al promoverlos a factor
+            // (vía la regla de factor con paréntesis) y no aplica
+            // `condicion → factor` a tiempo para que el LOGICO_NOT lo vea.
+            g.group("condicion", "LOGICO_NOT (condicion | expresion | factor)");
+            g.group("condicion", "(condicion | expresion | factor) (LOGICO_AND | LOGICO_OR) (condicion | expresion | factor)");
 
             // --- 2. SENTENCIAS ATÓMICAS (Sin control de flujo aún) ---
             // Declaración:
@@ -249,6 +258,58 @@ public class AnalizadorSintactico {
         g.group("programa", "bloque FIN", true, 1, "Error sintáctico: Falta 'inicio'");
 
         g.show();
+
+        // Validación post-loop: si tras toda la reducción no se formó NINGUNA
+        // producción `programa`, el árbol sintáctico quedó fragmentado y los
+        // fallbacks de "falta inicio/fin" no aplicaron (porque ni siquiera
+        // se formó `bloque`). Reportamos un error genérico para que el
+        // problema no pase silencioso — antes el generador de 3 direcciones
+        // seguía emitiendo .3d incluso cuando la gramática no convergió.
+        if (!formoProduccionPrograma(g) && Repositorio.listaErrores.isEmpty()) {
+            // Usamos el primer token disponible para la línea/columna del
+            // reporte; si no hay tokens, ya se reportó otro error antes.
+            Token ref = tokens.isEmpty() ? null : tokens.get(0);
+            if (ref != null) {
+                Repositorio.listaErrores.add(new compilerTools.ErrorLSSL(
+                    203,
+                    "Error sintáctico: la estructura del programa no pudo ser reconocida en su totalidad. "
+                    + "Revise sentencias mal cerradas, condiciones malformadas, "
+                    + "o estructuras `si/sino` con anidación ambigua.",
+                    new Token(ref.getLexeme(), "ESTRUCTURA_INVALIDA",
+                              ref.getLine(), ref.getColumn())));
+            }
+        }
+    }
+
+    /**
+     * True si la gramática reduce con éxito al menos una producción
+     * {@code programa}. Inspecciona por reflexión el campo
+     * {@code producciones} de {@link Grammar} (lista de
+     * {@code Produccion} con método {@code getName()}). Si la reflexión
+     * falla (incompatibilidad del jar), asume éxito para no introducir
+     * falsos positivos.
+     */
+    private static boolean formoProduccionPrograma(Grammar g) {
+        try {
+            Field campoProd = Grammar.class.getDeclaredField("producciones");
+            campoProd.setAccessible(true);
+            Object lista = campoProd.get(g);
+            if (!(lista instanceof java.util.List)) return true;
+            for (Object p : (java.util.List<?>) lista) {
+                if (p == null) continue;
+                try {
+                    java.lang.reflect.Method m = p.getClass().getMethod("getName");
+                    Object name = m.invoke(p);
+                    if ("programa".equals(name)) return true;
+                } catch (NoSuchMethodException ignore) {
+                    // Versión incompatible: damos por bueno
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     /** Secuencias SGR de ANSI ([...m) emitidas por compilerTools.Grammar. */

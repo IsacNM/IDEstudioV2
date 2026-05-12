@@ -1,0 +1,17 @@
+n:=5;
+msg:="hola";
+if (n) then GOTO L1;
+GOTO L2;
+L1:
+MOSTRAR "nunca";
+L2:
+if (msg) then GOTO L3;
+GOTO L4;
+L3:
+MOSTRAR "nunca";
+L4:
+if (-n-n) then GOTO L5;
+GOTO L6;
+L5:
+MOSTRAR "nunca";
+L6:

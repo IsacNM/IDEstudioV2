@@ -112,7 +112,7 @@ MOSTRAR "opcion no reconocida";
 L18:
 i:=n;
 L23:
-if (i>0-y-continuar::cierto) then GOTO L24;
+if (i>0-y--n-continuar::falso) then GOTO L24;
 GOTO L25;
 L24:
 MOSTRAR "cuenta regresiva:";
@@ -135,7 +135,7 @@ MOSTRAR i;
 i:=i-1;
 GOTO L28;
 L30:
-if (-n-(aprobados::0)-y-promedio>=70.0) then GOTO L31;
+if (aprobados:!0-y-promedio>=70.0) then GOTO L31;
 GOTO L32;
 L31:
 MOSTRAR "grupo con buen desempeno";

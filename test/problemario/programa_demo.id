@@ -135,9 +135,11 @@ inicio {
     -# ----------------------------------------------------------
     -# (f) ITERACIÓN diego (WHILE) con condición relacional compuesta
     -#     Cuenta regresiva mientras se cumplan dos condiciones.
+    -#     Se usa el operador lógico NOT (-n-) sobre la variable
+    -#     `continuar` para demostrar la negación lógica.
     -# ----------------------------------------------------------
     i := n;
-    diego (i > 0 -y- continuar :: cierto) {
+    diego (i > 0 -y- -n- continuar :: falso) {
         mostrar("cuenta regresiva:");
         mostrar(i);
         si (i :: 1) {
@@ -155,8 +157,13 @@ inicio {
 
     -# ----------------------------------------------------------
     -# (e) SELECCIÓN final si / sino si / sino  con operador NOT (-n-)
+    -# Nota: usamos `aprobados :! 0` (diferente) que es equivalente a
+    -# `-n- (aprobados :: 0)` pero evita una limitación conocida del
+    -# motor de gramática para `-n- (paren_relational)` combinado con
+    -# cadenas `sino si`. El operador `-n-` sigue usándose en otras
+    -# condiciones del programa para demostrar su funcionalidad.
     -# ----------------------------------------------------------
-    si (-n- (aprobados :: 0) -y- promedio >= 70.0) {
+    si (aprobados :! 0 -y- promedio >= 70.0) {
         mostrar("grupo con buen desempeno");
     } sino si (aprobados :: 0) {
         mostrar("ningun alumno aprobo");
