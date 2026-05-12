@@ -1,3 +1,6 @@
+hola:="hola";
+n1:=2;
+n2:=3;
 suma:=0;
 aprobados:=0;
 reprobados:=0;

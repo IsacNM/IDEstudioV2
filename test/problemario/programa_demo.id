@@ -24,6 +24,8 @@ inicio {
     var entero i;
     var entero opcion;
     var decimal nota;
+    var texto hola := "hola";
+    var entero n1 := 2, n2 := 3;
 
     -# ----------------------------------------------------------
     -# (a) DECLARACIONES MÚLTIPLES CON ASIGNACIÓN

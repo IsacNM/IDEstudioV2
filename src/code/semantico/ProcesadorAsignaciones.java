@@ -14,6 +14,17 @@ public class ProcesadorAsignaciones {
             if (!TokenTipo.IDENTIFICADOR.equals(token.getLexicalComp())) continue;
             if (!TokenUtils.tokenEn(i + 1, TokenTipo.ASIGNACION)) continue;
 
+            // No re-procesar las inicializaciones que están dentro de una
+            // declaración `var/const T id := expr [, id := expr]* ;`.
+            // TablaSimbolos.construir() ya las evaluó con corte por coma
+            // (soloHastaCom=true). Si pasamos por aquí, evaluarExpresion
+            // extraería hasta el ';' final, contaminándose con los
+            // inicializadores hermanos. P.ej. en
+            //     var entero n1 := 2, n2 := 3;
+            // sin este filtro, n1 termina recibiendo el valor "3" porque
+            // su evaluación absorbe los tokens "2 , n2 := 3".
+            if (esIdentDeDeclaracion(i)) continue;
+
             String nombreVar = token.getLexeme();
 
             if (!tieneErrorDeTipo(nombreVar, i)) {
@@ -27,6 +38,28 @@ public class ProcesadorAsignaciones {
             if (siguientePuntoComa < 0) break;
             i = siguientePuntoComa;
         }
+    }
+
+    /**
+     * True si el identificador en {@code pos} es parte de una declaración:
+     *   - precedido directamente por VAR/CONST + tipo (forma simple
+     *     `var T id`), o
+     *   - precedido por COMA dentro de una declaración (forma múltiple
+     *     `var T a, b, c`).
+     */
+    private static boolean esIdentDeDeclaracion(int pos) {
+        if (TokenUtils.tokenEn(pos - 2, TokenTipo.VAR)
+                || TokenUtils.tokenEn(pos - 2, TokenTipo.CONST)) {
+            return true;
+        }
+        if (!TokenUtils.tokenEn(pos - 1, TokenTipo.COMA)) return false;
+        // ¿Hay un VAR/CONST en la misma sentencia (antes del último ';')?
+        for (int j = pos - 1; j >= 0; j--) {
+            String comp = Repositorio.listaTokens.get(j).getLexicalComp();
+            if (TokenTipo.VAR.equals(comp) || TokenTipo.CONST.equals(comp)) return true;
+            if (TokenTipo.PUNTO_COMA.equals(comp)) return false;
+        }
+        return false;
     }
 
     public static void validarSentenciasLeer() {
