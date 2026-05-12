@@ -1,0 +1,57 @@
+-# =====================================================
+-# Prueba: WHILE (diego) sin switch ni for.
+-# Ejercita: L_regreso, L_true, L_false y break implícito.
+-# =====================================================
+inicio {
+
+    var entero i;
+    var entero suma;
+    var entero limite;
+
+    i      := 0;
+    suma   := 0;
+    limite := 10;
+
+    -# While simple acumulando
+    diego (i < limite) {
+        suma := suma + i;
+        i    := i + 1;
+    }
+    mostrar("suma 0..9:");
+    mostrar(suma);
+
+    -# While con condición compuesta
+    i := 0;
+    diego (i < limite -y- suma > 0) {
+        suma := suma - 1;
+        i    := i + 1;
+    }
+    mostrar("suma decrementada:");
+    mostrar(suma);
+
+    -# While anidado
+    var entero x;
+    var entero y;
+    x := 0;
+    diego (x < 3) {
+        y := 0;
+        diego (y < 3) {
+            mostrar(x);
+            mostrar(y);
+            y := y + 1;
+        }
+        x := x + 1;
+    }
+
+    -# While con IF dentro
+    i := 0;
+    diego (i < limite) {
+        si (i % 2 :: 0) {
+            mostrar("par");
+        } sino {
+            mostrar("impar");
+        }
+        i := i + 1;
+    }
+
+} fin

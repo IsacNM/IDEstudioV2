@@ -1,0 +1,93 @@
+-# =====================================================
+-# Prueba integral: combina todas las estructuras.
+-# Ejercita: VAR múltiple, aritmética, IF, WHILE, FOR,
+-# SWITCH anidados, LEER, MOSTRAR y concatenación.
+-# =====================================================
+inicio {
+
+    -# Declaración múltiple con y sin inicializador
+    var entero opcion, n := 5, total := 0, i;
+    var decimal promedio := 0.0;
+    var texto mensaje := "resultado:";
+    var logico continuar := cierto;
+
+    mostrar("elige una opcion (1..3):");
+    leer(opcion);
+
+    -# Validación con IF anidado
+    si (opcion < 1 -o- opcion > 3) {
+        mostrar("opcion fuera de rango, se usara 1");
+        opcion := 1;
+    } sino {
+        mostrar("opcion valida");
+    }
+
+    suich (opcion) {
+
+        -# ---------- CASO 1: FOR + IF + acumulador ----------
+        caso 1:
+            isac (i := 1; i <= n; ++>i) {
+                si (i % 2 :: 0) {
+                    total := total + i;
+                } sino {
+                    total := total - i;
+                }
+            }
+            mostrar(mensaje);
+            mostrar(total);
+            rompe;
+
+        -# ---------- CASO 2: WHILE + SWITCH anidado ----------
+        caso 2:
+            i := 0;
+            diego (i < n -y- continuar :: cierto) {
+                suich (i) {
+                    caso 0:
+                        mostrar("cero");
+                        rompe;
+                    caso 1:
+                        mostrar("uno");
+                        rompe;
+                    caso 2:
+                        mostrar("dos");
+                        rompe;
+                    defecto:
+                        mostrar("otro");
+                        rompe;
+                }
+                i := i + 1;
+            }
+            rompe;
+
+        -# ---------- CASO 3: aritmética + concatenación ----------
+        caso 3:
+            total    := (n + 2) * (n - 1) / 2;
+            promedio := total / n;
+            mensaje  := "total = " &+ "calculado";
+            mostrar(mensaje);
+            mostrar(total);
+            mostrar(promedio);
+            rompe;
+
+        defecto:
+            mostrar("opcion no manejada");
+            rompe;
+    }
+
+    -# Bloque final fuera del switch
+    si (total > 0) {
+        mostrar("hay valor positivo");
+    } sino si (total :: 0) {
+        mostrar("total es cero");
+    } sino {
+        mostrar("total negativo");
+    }
+
+    -# Loop final con decremento
+    isac (i := n; i > 0; --<i) {
+        mostrar(i);
+    }
+
+    mostrar("fin del programa");
+
+} fin

@@ -1,0 +1,63 @@
+-# =====================================================
+-# Prueba: IF / SINO SI / SINO con anidamiento profundo.
+-# Ejercita: generación de etiquetas L_true/L_false/L_fin.
+-# =====================================================
+inicio {
+
+    var entero edad;
+    var entero ingresos;
+    var logico activo;
+
+    edad     := 25;
+    ingresos := 15000;
+    activo   := cierto;
+
+    -# IF anidado dentro de otro IF
+    si (edad >= 18) {
+        si (ingresos >= 10000) {
+            si (activo :: cierto) {
+                mostrar("cliente premium");
+            } sino {
+                mostrar("cliente inactivo");
+            }
+        } sino si (ingresos >= 5000) {
+            mostrar("cliente medio");
+        } sino {
+            mostrar("cliente basico");
+        }
+    } sino {
+        mostrar("menor de edad");
+    }
+
+    -# IF con condición compuesta (-y-, -o-, -n-)
+    si (edad > 18 -y- ingresos > 0) {
+        mostrar("adulto con ingresos");
+    }
+
+    si (edad < 18 -o- ingresos :: 0) {
+        mostrar("requiere apoyo");
+    } sino {
+        mostrar("autosuficiente");
+    }
+
+    -# IF con negación lógica
+    si (-n- activo) {
+        mostrar("usuario inactivo");
+    } sino {
+        mostrar("usuario activo");
+    }
+
+    -# Cadena de SINO SI larga
+    si (edad < 13) {
+        mostrar("nino");
+    } sino si (edad < 18) {
+        mostrar("adolescente");
+    } sino si (edad < 30) {
+        mostrar("joven");
+    } sino si (edad < 60) {
+        mostrar("adulto");
+    } sino {
+        mostrar("adulto mayor");
+    }
+
+} fin

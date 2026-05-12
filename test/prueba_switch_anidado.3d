@@ -1,0 +1,79 @@
+categoria:=2;
+nivel:=3;
+activo:=cierto;
+contador:=0;
+if (categoria::1) then GOTO L2;
+if (categoria::2) then GOTO L3;
+if (categoria::3) then GOTO L4;
+GOTO L5;
+L2:
+i:=0;
+L6:
+if (i<5) then GOTO L7;
+GOTO L8;
+L7:
+if (i%2::0) then GOTO L9;
+GOTO L10;
+L9:
+MOSTRAR "par";
+GOTO L11;
+L10:
+MOSTRAR "impar";
+L11:
+T1:=i+1;
+i:=T1;
+GOTO L6;
+L8:
+GOTO L1;
+L3:
+i:=1;
+L12:
+if (i<=nivel) then GOTO L13;
+GOTO L14;
+L13:
+if (i::1) then GOTO L16;
+if (i::2) then GOTO L17;
+GOTO L18;
+L16:
+MOSTRAR "primer nivel";
+GOTO L15;
+L17:
+MOSTRAR "segundo nivel";
+GOTO L15;
+L18:
+MOSTRAR "nivel avanzado";
+L15:
+T2:=contador+i;
+contador:=T2;
+i:=i+1;
+GOTO L12;
+L14:
+MOSTRAR "contador:";
+MOSTRAR contador;
+GOTO L1;
+L4:
+if (activo-y-nivel>0) then GOTO L19;
+GOTO L20;
+L19:
+i:=0;
+L21:
+if (i<nivel) then GOTO L22;
+GOTO L23;
+L22:
+MOSTRAR i;
+i:=i+1;
+GOTO L21;
+L23:
+if (nivel>=3) then GOTO L24;
+GOTO L25;
+L24:
+MOSTRAR "nivel alto alcanzado";
+L25:
+GOTO L26;
+L20:
+MOSTRAR "inactivo o nivel cero";
+L26:
+GOTO L1;
+L5:
+MOSTRAR "categoria desconocida";
+L1:

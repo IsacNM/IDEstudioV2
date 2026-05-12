@@ -1,0 +1,94 @@
+opcion:=2;
+n:=5;
+a:=10;
+b:=4;
+c:=3;
+T1:=a+b;
+T2:=c*2;
+T3:=T2/1;
+T4:=T3%3;
+T5:=T1-T4;
+resultado:=T5;
+T6:=a+b;
+T7:=c+1;
+T8:=T6*T7;
+T9:=a-b;
+T10:=T9/2;
+T11:=T8-T10;
+resultado:=T11;
+if (opcion::1) then GOTO L2;
+if (opcion::2) then GOTO L3;
+if (opcion::3) then GOTO L4;
+GOTO L5;
+L2:
+if (n>10) then GOTO L6;
+GOTO L7;
+L6:
+MOSTRAR "n es mayor a diez";
+GOTO L8;
+L7:
+if (n::0) then GOTO L9;
+GOTO L10;
+L9:
+MOSTRAR "n es cero";
+GOTO L11;
+L10:
+if (n<0) then GOTO L12;
+GOTO L13;
+L12:
+MOSTRAR "n es negativo";
+GOTO L14;
+L13:
+MOSTRAR "n esta entre 1 y 10";
+L14:
+L11:
+L8:
+GOTO L1;
+L3:
+suma:=0;
+i:=1;
+L15:
+if (i<=n) then GOTO L16;
+GOTO L17;
+L16:
+T12:=suma+i;
+suma:=T12;
+MOSTRAR i;
+i:=i+1;
+GOTO L15;
+L17:
+MOSTRAR "suma total:";
+MOSTRAR suma;
+GOTO L1;
+L4:
+i:=0;
+L18:
+if (i<n) then GOTO L19;
+GOTO L20;
+L19:
+MOSTRAR i;
+T13:=i+1;
+i:=T13;
+GOTO L18;
+L20:
+MOSTRAR "fin del while";
+GOTO L1;
+L5:
+MOSTRAR "opcion no reconocida, demo:";
+i:=0;
+L21:
+if (i<3) then GOTO L22;
+GOTO L23;
+L22:
+if (i::1) then GOTO L24;
+GOTO L25;
+L24:
+MOSTRAR "uno";
+GOTO L26;
+L25:
+MOSTRAR i;
+L26:
+i:=i+1;
+GOTO L21;
+L23:
+L1:

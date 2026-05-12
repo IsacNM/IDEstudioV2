@@ -118,12 +118,17 @@ public class SplashScreen extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
+                // El Look & Feel debe configurarse ANTES de instanciar/mostrar
+                // la ventana, de lo contrario los componentes ya se renderizaron
+                // con el L&F default y el cambio no surte efecto.
+                try {
+                    UIManager.setLookAndFeel("com.jtattoo.plaf.luna.LunaLookAndFeel");
+                } catch (Exception e) {
+                    java.util.logging.Logger.getLogger(SplashScreen.class.getName())
+                        .log(java.util.logging.Level.WARNING,
+                             "No se pudo aplicar Look & Feel 'Luna' al splash", e);
+                }
                 new SplashScreen().setVisible(true);
-try {
-            UIManager.setLookAndFeel("com.jtattoo.plaf.luna.LunaLookAndFeel");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
             }
         });
     }

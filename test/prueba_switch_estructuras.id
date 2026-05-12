@@ -1,0 +1,79 @@
+inicio {
+
+    var entero opcion;
+    var entero n;
+    var entero i;
+    var entero suma;
+
+    opcion := 2;
+    n      := 5;
+
+    var entero a;
+    var entero b;
+    var entero c;
+    var entero resultado;
+    var decimal promedio;
+
+    a := 10;
+    b := 4;
+    c := 3;
+
+
+    -# Expresion con todos los operadores aritméticos
+    resultado := a + b - c * 2 / 1 % 3;
+
+    -# Expresion encadenada con anidación profunda
+    resultado := ((a + b) * (c + 1)) - ((a - b) / 2);
+
+
+
+    suich (opcion) {
+
+        -# ---------- CASO 1: IF / SINO SI / SINO ----------
+        caso 1:
+            si (n > 10) {
+                mostrar("n es mayor a diez");
+            } sino si (n :: 0) {
+                mostrar("n es cero");
+            } sino si (n < 0) {
+                mostrar("n es negativo");
+            } sino {
+                mostrar("n esta entre 1 y 10");
+            }
+            rompe;
+
+        -# ---------- CASO 2: FOR (isac) ----------
+        caso 2:
+            suma := 0;
+            isac (i := 1; i <= n; ++>i) {
+                suma := suma + i;
+                mostrar(i);
+            }
+            mostrar("suma total:");
+            mostrar(suma);
+            rompe;
+
+        -# ---------- CASO 3: WHILE (diego) ----------
+        caso 3:
+            i := 0;
+            diego (i < n) {
+                mostrar(i);
+                i := i + 1;
+            }
+            mostrar("fin del while");
+            rompe;
+
+        -# ---------- DEFECTO: IF + FOR ----------
+        defecto:
+            mostrar("opcion no reconocida, demo:");
+            isac (i := 0; i < 3; ++>i) {
+                si (i :: 1) {
+                    mostrar("uno");
+                } sino {
+                    mostrar(i);
+                }
+            }
+            rompe;
+    }
+
+} fin

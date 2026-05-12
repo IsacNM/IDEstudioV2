@@ -1,0 +1,55 @@
+inicio {
+
+    var entero i;
+    var entero j;
+    var entero suma;
+    var entero producto;
+
+    suma     := 0;
+    producto := 1;
+
+    -# FOR clásico con incremento
+    isac (i := 1; i <= 5; ++>i) {
+        suma     := suma + i;
+        producto := producto * i;
+    }
+    mostrar("suma 1..5:");
+    mostrar(suma);
+    mostrar("factorial 5:");
+    mostrar(producto);
+
+    -# FOR con decremento (--<)
+    isac (i := 10; i > 0; --<i) {
+        mostrar(i);
+    }
+
+    -# FOR con declaración var en la inicialización
+    isac (var entero k := 0; k < 4; ++>k) {
+        mostrar(k);
+    }
+
+    -# FOR anidado: matriz 3x3
+    isac (i := 1; i <= 3; ++>i) {
+        isac (j := 1; j <= 3; ++>j) {
+            mostrar(i);
+            mostrar(j);
+            mostrar(i * j);
+        }
+    }
+
+    -# FOR con IF dentro: imprimir solo pares
+    isac (i := 0; i < 10; ++>i) {
+        si (i % 2 :: 0) {
+            mostrar(i);
+        }
+    }
+
+    -# FOR cuya condición usa expresión compuesta
+    suma := 0;
+    isac (i := 0; i < 100 -y- suma < 50; ++>i) {
+        suma := suma + i;
+    }
+    mostrar("suma parcial:");
+    mostrar(suma);
+
+} fin

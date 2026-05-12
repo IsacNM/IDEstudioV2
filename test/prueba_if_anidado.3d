@@ -1,0 +1,74 @@
+edad:=25;
+ingresos:=15000;
+activo:=cierto;
+if (edad>=18) then GOTO L1;
+GOTO L2;
+L1:
+if (ingresos>=10000) then GOTO L3;
+GOTO L4;
+L3:
+if (activo::cierto) then GOTO L5;
+GOTO L6;
+L5:
+MOSTRAR "cliente premium";
+GOTO L7;
+L6:
+MOSTRAR "cliente inactivo";
+L7:
+GOTO L8;
+L4:
+if (ingresos>=5000) then GOTO L9;
+GOTO L10;
+L9:
+MOSTRAR "cliente medio";
+GOTO L11;
+L10:
+MOSTRAR "cliente basico";
+L11:
+L8:
+GOTO L12;
+L2:
+MOSTRAR "menor de edad";
+L12:
+if (edad>18-y-ingresos>0) then GOTO L13;
+GOTO L14;
+L13:
+MOSTRAR "adulto con ingresos";
+L14:
+if (edad<18-o-ingresos::0) then GOTO L15;
+GOTO L16;
+L15:
+MOSTRAR "requiere apoyo";
+GOTO L17;
+L16:
+MOSTRAR "autosuficiente";
+L17:
+if (edad<13) then GOTO L18;
+GOTO L19;
+L18:
+MOSTRAR "nino";
+GOTO L20;
+L19:
+if (edad<18) then GOTO L21;
+GOTO L22;
+L21:
+MOSTRAR "adolescente";
+GOTO L23;
+L22:
+if (edad<30) then GOTO L24;
+GOTO L25;
+L24:
+MOSTRAR "joven";
+GOTO L26;
+L25:
+if (edad<60) then GOTO L27;
+GOTO L28;
+L27:
+MOSTRAR "adulto";
+GOTO L29;
+L28:
+MOSTRAR "adulto mayor";
+L29:
+L26:
+L23:
+L20:

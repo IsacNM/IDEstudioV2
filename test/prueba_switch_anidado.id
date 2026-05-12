@@ -1,0 +1,66 @@
+inicio {
+
+    -# Declaracion multiple permitida por la gramatica
+    var entero categoria, nivel, i, contador;
+    var logico activo;
+
+    categoria := 2;
+    nivel     := 3;
+    activo    := cierto;
+    contador  := 0;
+
+    suich (categoria) {
+
+        -# ---------- CASO 1: WHILE + IF ----------
+        caso 1:
+            i := 0;
+            diego (i < 5) {
+                si (i % 2 :: 0) {
+                    mostrar("par");
+                } sino {
+                    mostrar("impar");
+                }
+                i := i + 1;
+            }
+            rompe;
+
+        -# ---------- CASO 2: FOR + SWITCH ANIDADO ----------
+        caso 2:
+            isac (i := 1; i <= nivel; ++>i) {
+                suich (i) {
+                    caso 1:
+                        mostrar("primer nivel");
+                        rompe;
+                    caso 2:
+                        mostrar("segundo nivel");
+                        rompe;
+                    defecto:
+                        mostrar("nivel avanzado");
+                        rompe;
+                }
+                contador := contador + i;
+            }
+            mostrar("contador:");
+            mostrar(contador);
+            rompe;
+
+        -# ---------- CASO 3: IF con FOR dentro ----------
+        caso 3:
+            si (activo -y- nivel > 0) {
+                isac (i := 0; i < nivel; ++>i) {
+                    mostrar(i);
+                }
+                si (nivel >= 3) {
+                    mostrar("nivel alto alcanzado");
+                }
+            } sino {
+                mostrar("inactivo o nivel cero");
+            }
+            rompe;
+
+        defecto:
+            mostrar("categoria desconocida");
+            rompe;
+    }
+
+} fin

@@ -1,0 +1,82 @@
+suma:=0;
+producto:=1;
+i:=1;
+L1:
+if (i<=5) then GOTO L2;
+GOTO L3;
+L2:
+T1:=suma+i;
+suma:=T1;
+T2:=producto*i;
+producto:=T2;
+i:=i+1;
+GOTO L1;
+L3:
+MOSTRAR "suma 1..5:";
+MOSTRAR suma;
+MOSTRAR "factorial 5:";
+MOSTRAR producto;
+i:=10;
+L4:
+if (i>0) then GOTO L5;
+GOTO L6;
+L5:
+MOSTRAR i;
+i:=i-1;
+GOTO L4;
+L6:
+k:=0;
+L7:
+if (k<4) then GOTO L8;
+GOTO L9;
+L8:
+MOSTRAR k;
+k:=k+1;
+GOTO L7;
+L9:
+i:=1;
+L10:
+if (i<=3) then GOTO L11;
+GOTO L12;
+L11:
+j:=1;
+L13:
+if (j<=3) then GOTO L14;
+GOTO L15;
+L14:
+MOSTRAR i;
+MOSTRAR j;
+T3:=i*j;
+MOSTRAR T3;
+j:=j+1;
+GOTO L13;
+L15:
+i:=i+1;
+GOTO L10;
+L12:
+i:=0;
+L16:
+if (i<10) then GOTO L17;
+GOTO L18;
+L17:
+if (i%2::0) then GOTO L19;
+GOTO L20;
+L19:
+MOSTRAR i;
+L20:
+i:=i+1;
+GOTO L16;
+L18:
+suma:=0;
+i:=0;
+L21:
+if (i<100-y-suma<50) then GOTO L22;
+GOTO L23;
+L22:
+T4:=suma+i;
+suma:=T4;
+i:=i+1;
+GOTO L21;
+L23:
+MOSTRAR "suma parcial:";
+MOSTRAR suma;

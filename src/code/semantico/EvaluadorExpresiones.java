@@ -10,16 +10,18 @@ public class EvaluadorExpresiones {
 
     private static final Map<String, Integer> PRECEDENCIA = new HashMap<>();
 
+    // Precedencia (mayor = se evalúa antes), siguiendo la convención
+    // estándar de C/Java/Python:  ~  >  *,/,%  >  +,-,&+  >  -y-  >  -o-
     static {
-        PRECEDENCIA.put("+",   1);
-        PRECEDENCIA.put("-",   1);
-        PRECEDENCIA.put("&+",  1);
-        PRECEDENCIA.put("*",   2);
-        PRECEDENCIA.put("/",   2);
-        PRECEDENCIA.put("%",   2);
-        PRECEDENCIA.put("-o-", 0);
-        PRECEDENCIA.put("-y-", 0);
-        PRECEDENCIA.put("~",   3);
+        PRECEDENCIA.put("-o-", 1);                        // OR (más laxo)
+        PRECEDENCIA.put("-y-", 2);                        // AND
+        PRECEDENCIA.put("+",   3);
+        PRECEDENCIA.put("-",   3);
+        PRECEDENCIA.put("&+",  3);                        // concat
+        PRECEDENCIA.put("*",   4);
+        PRECEDENCIA.put("/",   4);
+        PRECEDENCIA.put("%",   4);
+        PRECEDENCIA.put("~",   5);                        // NOT (más fuerte)
     }
 
     public static ArrayList<String> infijaAPostfija(ArrayList<String> infija) {

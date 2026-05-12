@@ -1,0 +1,25 @@
+inicio {
+
+    var entero opcion;
+    opcion := 2;
+
+    suich (opcion) {
+
+        caso 1:
+            mostrar("opcion uno");
+            rompe;
+
+        caso 2:
+            mostrar("opcion dos");
+            rompe;
+
+        caso 3:
+            mostrar("opcion tres");
+            rompe;
+
+        defecto:
+            mostrar("opcion invalida");
+            rompe;
+    }
+
+} fin

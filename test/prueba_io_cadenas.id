@@ -1,0 +1,47 @@
+-# =====================================================
+-# Prueba: LEER, MOSTRAR y concatenación con &+.
+-# Ejercita: instrucciones LEER y MOSTRAR + texto.
+-# =====================================================
+inicio {
+
+    var texto nombre;
+    var texto apellido;
+    var texto saludo;
+    var entero edad;
+    var entero anio;
+
+    -# Lectura de variables
+    mostrar("ingresa tu nombre:");
+    leer(nombre);
+
+    mostrar("ingresa tu apellido:");
+    leer(apellido);
+
+    mostrar("ingresa tu edad:");
+    leer(edad);
+
+    -# Concatenación de cadenas (&+)
+    saludo := "hola, " &+ nombre;
+
+    -# Concatenación encadenada
+    saludo := "hola " &+ nombre &+ " " &+ apellido;
+
+    mostrar(saludo);
+    mostrar("tu edad es:");
+    mostrar(edad);
+
+    -# Cálculo simple a partir de la entrada
+    anio := 2026 - edad;
+    mostrar("año aproximado de nacimiento:");
+    mostrar(anio);
+
+    -# MOSTRAR con expresión aritmética compuesta directamente
+    mostrar(edad * 12);
+    mostrar((edad + 10) * 2);
+
+    -# Mostrar literal carácter
+    var car inicial;
+    inicial := 'A';
+    mostrar(inicial);
+
+} fin

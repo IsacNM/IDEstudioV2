@@ -24,6 +24,16 @@ public class IDE extends javax.swing.JFrame implements Runnable {
         hiloReloj.start();
 
         File.newFile(jTabbed, positionLabel);
+
+        // Aplicar el idioma persistido al arrancar (si existe) para que la
+        // ventana refleje la última preferencia del usuario.
+        java.util.Properties prop = new code.editor.ArchivoPropiedades().LeerPropiedades();
+        if (prop != null) {
+            String idiomaGuardado = prop.getProperty("idioma");
+            if (idiomaGuardado != null && !idiomaGuardado.isBlank()) {
+                actualizarIdioma(idiomaGuardado.trim().toLowerCase());
+            }
+        }
     }
 
     private Thread hiloReloj;
@@ -497,7 +507,9 @@ public class IDE extends javax.swing.JFrame implements Runnable {
     }//GEN-LAST:event_jmenuSalirActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        if (hiloReloj != null) hiloReloj.interrupt();
+        if (hiloReloj != null) {
+            hiloReloj.interrupt();
+        }
         File.exitApp(jTabbed, jFileChooser);
     }//GEN-LAST:event_formWindowClosing
 
@@ -574,6 +586,9 @@ public class IDE extends javax.swing.JFrame implements Runnable {
 
     private void ajustes9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ajustes9ActionPerformed
         // (placeholder: el botón de ajustes adicional aún no tiene acción)
+        JConfig dialogo = new JConfig(this, true, File.getTextAreaActual(jTabbed), jTabbed);
+        dialogo.setLocationRelativeTo(this);
+        dialogo.setVisible(true);
     }//GEN-LAST:event_ajustes9ActionPerformed
 
     private void ajustes6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ajustes6ActionPerformed
@@ -600,11 +615,15 @@ public class IDE extends javax.swing.JFrame implements Runnable {
                 jTextArea1, tablaSimbolos);
 
         String rutaArchivo = File.getRutaArchivo(jTabbed, jTabbed.getSelectedIndex());
-        if (rutaArchivo == null) return;
+        if (rutaArchivo == null) {
+            return;
+        }
 
         String ruta3D = code.intermedio.Generador3D.obtenerRuta3D(rutaArchivo);
         java.nio.file.Path p = java.nio.file.Paths.get(ruta3D);
-        if (!java.nio.file.Files.exists(p)) return;
+        if (!java.nio.file.Files.exists(p)) {
+            return;
+        }
         try {
             String contenido = java.nio.file.Files.readString(
                     p, java.nio.charset.StandardCharsets.UTF_8);
@@ -692,6 +711,11 @@ public class IDE extends javax.swing.JFrame implements Runnable {
     public void actualizarIdioma(String idioma) {
         boolean es = idioma.equals("es");
 
+        // Bandera global usada por Time/Position para localizar el reloj y
+        // la etiqueta de columna/renglón cuyas actualizaciones ocurren fuera
+        // de este método (hilo de reloj, listener de caret).
+        code.editor.Time.idiomaEs = es;
+
         // --- Ventana Principal ---
         setTitle(es ? "IDEstudio" : "IDEstudio");
 
@@ -734,7 +758,8 @@ public class IDE extends javax.swing.JFrame implements Runnable {
         // --- Labels de Estado (Textos iniciales) ---
         jLabel1.setText(es ? "Genere un nuevo archivo para continuar" : "Generate a new file to continue");
         positionLabel.setText(es ? "Columna: 1, Renglón: 1." : "Column: 1, Line: 1.");
-        // El timeLabel se actualiza solo por el hilo, no es necesario aquí.
+        // Forzar refresco inmediato del reloj sin esperar al siguiente tick.
+        timeLabel.setText(code.editor.Time.calcularHora());
 
         // --- Tooltips de la barra de iconos (ajustes) ---
         ajustes1.setToolTipText(es ? "Nuevo Archivo" : "New File");
@@ -747,15 +772,43 @@ public class IDE extends javax.swing.JFrame implements Runnable {
         ajustes6.setToolTipText(es ? "Compilar y Correr" : "Compile and Run");
         ajustes7.setToolTipText(es ? "Detener" : "Stop");
 
+        // --- Pestañas de paneles inferiores ---
+        if (jTabbedPane2.getTabCount() > 0) {
+            jTabbedPane2.setTitleAt(0, es ? "Salida de información" : "Information output");
+        }
+        if (jTabbedPane1.getTabCount() > 0) {
+            jTabbedPane1.setTitleAt(0, es ? "Resultado de compilación" : "Compilation result");
+        }
+
         // --- Tabla de Tokens ---
         String[] cabecera = es
-                ? new String[]{"Token", "Lexema", "Línea", "Columna"}
-                : new String[]{"Token", "Lexeme", "Line", "Column"};
+                ? new String[]{"Token", "Lexema", "[Renglón, Columna]"}
+                : new String[]{"Token", "Lexeme", "[Line, Column]"};
 
-        TablaTokens.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{{null, null, null, null}},
-                cabecera
-        ));
+        // Conservar el contenido actual de la tabla al cambiar las cabeceras.
+        javax.swing.table.DefaultTableModel modeloActual
+                = (javax.swing.table.DefaultTableModel) TablaTokens.getModel();
+        Object[][] datos = new Object[modeloActual.getRowCount()][cabecera.length];
+        for (int r = 0; r < modeloActual.getRowCount(); r++) {
+            for (int c = 0; c < Math.min(cabecera.length, modeloActual.getColumnCount()); c++) {
+                datos[r][c] = modeloActual.getValueAt(r, c);
+            }
+        }
+        TablaTokens.setModel(new javax.swing.table.DefaultTableModel(datos, cabecera));
         TablaTokens.setName(es ? "Tabla de tokens" : "Token table");
+
+        // --- Tabla de Símbolos (Identificadores) ---
+        String[] cabeceraSimbolos = es
+                ? new String[]{"Identificador", "Tipo", "Valor", "Categoría"}
+                : new String[]{"Identifier", "Type", "Value", "Category"};
+        javax.swing.table.DefaultTableModel modSim
+                = (javax.swing.table.DefaultTableModel) tablaSimbolos.getModel();
+        Object[][] datosSim = new Object[modSim.getRowCount()][cabeceraSimbolos.length];
+        for (int r = 0; r < modSim.getRowCount(); r++) {
+            for (int c = 0; c < Math.min(cabeceraSimbolos.length, modSim.getColumnCount()); c++) {
+                datosSim[r][c] = modSim.getValueAt(r, c);
+            }
+        }
+        tablaSimbolos.setModel(new javax.swing.table.DefaultTableModel(datosSim, cabeceraSimbolos));
     }
 }

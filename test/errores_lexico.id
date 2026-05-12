@@ -1,0 +1,10 @@
+-# =====================================================
+-# Errores LÉXICOS: caracteres no reconocidos por el lexer.
+-# =====================================================
+inicio {
+    var entero a;
+    a := 10 @ 5;        -# '@' no existe en el lenguaje
+    a := a $ 2;         -# '$' tampoco
+    a := a # 1;         -# '#' suelto (no es comentario)
+    a := a ?= 0;        -# '?' no es operador válido
+} fin

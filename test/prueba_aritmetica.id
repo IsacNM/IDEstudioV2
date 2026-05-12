@@ -1,0 +1,40 @@
+-# =====================================================
+-# Prueba: expresiones aritméticas y temporales (T1, T2...)
+-# Ejercita: +, -, *, /, %, paréntesis y precedencia.
+-# =====================================================
+inicio {
+
+    var entero a;
+    var entero b;
+    var entero c;
+    var entero resultado;
+    var decimal promedio;
+
+    a := 10;
+    b := 4;
+    c := 3;
+
+    -# Expresion sin paréntesis (precedencia) → debe emitir varios T#
+    resultado := a + b * c - 2;
+
+    -# Expresion con paréntesis que cambia la precedencia
+    resultado := (a + b) * (c - 1);
+
+    -# Expresion con todos los operadores aritméticos
+    resultado := a + b - c * 2 / 1 % 3;
+
+    -# Expresion encadenada con anidación profunda
+    resultado := ((a + b) * (c + 1)) - ((a - b) / 2);
+
+    -# Asignación inicial en la declaración con expresión simple
+    var entero acumulado := a + b;
+
+    -# Mezcla con variables y constantes
+    promedio := (a + b + c) / 3;
+
+    mostrar("resultado final:");
+    mostrar(resultado);
+    mostrar("promedio:");
+    mostrar(promedio);
+
+} fin

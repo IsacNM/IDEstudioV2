@@ -1,0 +1,65 @@
+i:=0;
+suma:=0;
+limite:=10;
+L1:
+if (i<limite) then GOTO L2;
+GOTO L3;
+L2:
+T1:=suma+i;
+suma:=T1;
+T2:=i+1;
+i:=T2;
+GOTO L1;
+L3:
+MOSTRAR "suma 0..9:";
+MOSTRAR suma;
+i:=0;
+L4:
+if (i<limite-y-suma>0) then GOTO L5;
+GOTO L6;
+L5:
+T3:=suma-1;
+suma:=T3;
+T4:=i+1;
+i:=T4;
+GOTO L4;
+L6:
+MOSTRAR "suma decrementada:";
+MOSTRAR suma;
+x:=0;
+L7:
+if (x<3) then GOTO L8;
+GOTO L9;
+L8:
+y:=0;
+L10:
+if (y<3) then GOTO L11;
+GOTO L12;
+L11:
+MOSTRAR x;
+MOSTRAR y;
+T5:=y+1;
+y:=T5;
+GOTO L10;
+L12:
+T6:=x+1;
+x:=T6;
+GOTO L7;
+L9:
+i:=0;
+L13:
+if (i<limite) then GOTO L14;
+GOTO L15;
+L14:
+if (i%2::0) then GOTO L16;
+GOTO L17;
+L16:
+MOSTRAR "par";
+GOTO L18;
+L17:
+MOSTRAR "impar";
+L18:
+T7:=i+1;
+i:=T7;
+GOTO L13;
+L15:

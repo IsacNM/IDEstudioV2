@@ -4,9 +4,13 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.text.*;
 
 public class ErrorLine implements Highlighter.HighlightPainter {
+
+    private static final Logger LOG = Logger.getLogger(ErrorLine.class.getName());
 
     private final Color color;
 
@@ -33,7 +37,7 @@ public class ErrorLine implements Highlighter.HighlightPainter {
             g.fillRect(0, y, c.getWidth(), lineHeight);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            LOG.log(Level.WARNING, "Error al pintar línea de error en el editor", e);
         }
     }
 
@@ -55,7 +59,7 @@ public class ErrorLine implements Highlighter.HighlightPainter {
         area.getHighlighter().addHighlight(start, end, painter);
 
     } catch (Exception e) {
-        e.printStackTrace();
+        LOG.log(Level.WARNING, "No se pudo colorear la línea " + numeroLinea, e);
     }
 }
 

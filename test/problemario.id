@@ -1,0 +1,14 @@
+#Instrucciones: Realice en equipo de trabajo de 2 integrantes lo que se plantean a continuación:
+#1. Con base en la actividad de investigación anterior, generar un documento PDF con un programa
+#de ejemplo funcional realizado con su compilador donde aparezcan:
+#• declaraciones simples y/o con asignaciones
+#• asignaciones simples
+#• asignaciones de expresiones aritméticas complejas
+#• expresiones relacionales compuestas
+#• todas las estructuras de selección y de iteración
+#• todas las instrucciones de su compilador
+#2. Obtener el código intermedio (3 direcciones) sin optimizar (si ya aparece algo optimizado, hacer
+#las modificaciones correspondientes para obtenerlo sin optimizar).
+#3. Optimizar el código intermedio anterior.
+#4. Mostrar el código fuente, el código intermedio sin optimizar y el código intermedio optimizado
+#explicando cómo se aplicó la optimización.

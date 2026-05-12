@@ -1,0 +1,47 @@
+-# =====================================================
+-# Prueba: muchos temporales (T1, T2, T3...) en la misma
+-# expresión. Útil para inspeccionar el postfix evaluator.
+-# =====================================================
+inicio {
+
+    var entero a, b, c, d, e;
+    var entero r1, r2, r3, r4;
+
+    a := 2;
+    b := 3;
+    c := 4;
+    d := 5;
+    e := 6;
+
+    -# Expresion larga sin paréntesis (precedencia natural)
+    r1 := a + b * c - d / e + a % b;
+
+    -# Expresion con muchos paréntesis anidados
+    r2 := ((a + b) * (c + d)) - ((a - b) * (c - d));
+
+    -# Expresion mezclada con variables y literales
+    r3 := (a * 10) + (b * 100) - (c * 1000) + (d * 10000) - e;
+
+    -# Expresion auto-referenciada
+    r4 := r1 + r2 - r3;
+    r4 := r4 * (a + b) / (c + 1);
+
+    mostrar(r1);
+    mostrar(r2);
+    mostrar(r3);
+    mostrar(r4);
+
+    -# Reasignación encadenada usando expresiones
+    a := a + 1;
+    b := b + a;
+    c := c + b;
+    d := d + c;
+    e := e + d;
+
+    mostrar(a);
+    mostrar(b);
+    mostrar(c);
+    mostrar(d);
+    mostrar(e);
+
+} fin

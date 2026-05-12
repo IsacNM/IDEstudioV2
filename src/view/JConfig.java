@@ -27,6 +27,8 @@ public class JConfig extends javax.swing.JDialog {
     private JTextPane editorActual;
     private String idiomaSeleccionado = "es"; // valor por defecto
     public static String rutaPorDefecto = "";
+    public static String rutaEnsamblador = "";
+    public static String rutaEmuladorDOS = "";
     private Map<String, Color> temaColores; // <--- Mapa para guardar colores por tema
     private String temaSeleccionado = "General"; // <--- Opción seleccionada actualmente
 
@@ -50,14 +52,16 @@ public class JConfig extends javax.swing.JDialog {
         inicializarTemaColores();
 
         initComponents();
-        if (!rutaPorDefecto.isEmpty()) {
-            jTextField1.setText(rutaPorDefecto);
-        }
 
         cargarFuentes();    // ← llena la lista de fuentes
         cargarEstilos();    // ← llena la lista de estilos
         cargarTamaños();    // ← llena la lista de tamaños
         cargarTema();
+
+        // Cargar configuración persistida (idioma, fuente y rutas) ANTES de
+        // registrar listeners para evitar que el evento de selección dispare
+        // efectos secundarios sobre valores aún no cargados.
+        cargarConfiguracionPersistida();
 
         configurarListenersDeVista();
 
@@ -69,9 +73,66 @@ public class JConfig extends javax.swing.JDialog {
         jColorChooser1.setColor(colorInicial);
         txtEjemplo.setForeground(colorInicial);
 
+        // Aplicar el idioma cargado a los textos del propio diálogo.
+        actualizarTextosDeJConfig(idiomaSeleccionado);
+
         // Al final del constructor JConfig
 // Llamada inicial para que se coloree al abrir la ventana
         actualizarPreviewSintaxis();
+    }
+
+    /** Lee {@code ~/.idestudio/config.properties} y refleja los valores
+     *  guardados en los controles del diálogo (idioma, fuente, rutas de
+     *  trabajo / ensamblador / emulador). Es seguro llamarla aunque el
+     *  archivo no exista todavía: simplemente no hace nada. */
+    private void cargarConfiguracionPersistida() {
+        Properties prop = new ArchivoPropiedades().LeerPropiedades();
+
+        // 1. Idioma — selecciona el radio correspondiente.
+        if (prop != null) {
+            String idiomaGuardado = prop.getProperty("idioma");
+            if (idiomaGuardado != null && !idiomaGuardado.isBlank()) {
+                idiomaSeleccionado = idiomaGuardado.trim().toLowerCase();
+            }
+        }
+        if ("en".equals(idiomaSeleccionado)) {
+            Ingles.setSelected(true);
+        } else {
+            Español.setSelected(true);
+        }
+
+        // 2. Fuente actual — preselecciona en la lista y muéstrala en el
+        //    campo "MostrarFuente" para que se vea de inmediato.
+        String familia = (textPane != null && textPane.getFont() != null)
+                ? textPane.getFont().getFamily() : null;
+        if (familia != null) {
+            fuenteSeleccionada = familia;
+            MostrarFuente.setText(familia);
+            listaFuentes.setSelectedValue(familia, true);
+        }
+
+        // 3. Rutas de la pestaña Compilación.
+        if (prop != null) {
+            String r1 = prop.getProperty("rutaTrabajo", rutaPorDefecto);
+            String r2 = prop.getProperty("rutaEnsamblador", rutaEnsamblador);
+            String r3 = prop.getProperty("rutaEmuladorDOS", rutaEmuladorDOS);
+            if (r1 != null && !r1.isBlank()) {
+                rutaPorDefecto = r1;
+                jTextField1.setText(r1);
+            } else if (!rutaPorDefecto.isEmpty()) {
+                jTextField1.setText(rutaPorDefecto);
+            }
+            if (r2 != null && !r2.isBlank()) {
+                rutaEnsamblador = r2;
+                jTextField2.setText(r2);
+            }
+            if (r3 != null && !r3.isBlank()) {
+                rutaEmuladorDOS = r3;
+                jTextField3.setText(r3);
+            }
+        } else if (!rutaPorDefecto.isEmpty()) {
+            jTextField1.setText(rutaPorDefecto);
+        }
     }
 
     /** @deprecated usar {@link LanguageKeywords#all()}. */
@@ -244,6 +305,11 @@ public class JConfig extends javax.swing.JDialog {
         listaFuentes.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 fuenteSeleccionada = listaFuentes.getSelectedValue();
+                if (fuenteSeleccionada != null) {
+                    // Reflejar en el campo "MostrarFuente" qué fuente está
+                    // seleccionada (antes mostraba siempre "jTextField1").
+                    MostrarFuente.setText(fuenteSeleccionada);
+                }
                 actualizarPreview();
             }
         });
@@ -286,6 +352,20 @@ public class JConfig extends javax.swing.JDialog {
             cambiarIdioma("en");
         });
 
+        // jButton3 (Buscar emulador DOS) no tiene listener generado por
+        // NetBeans, lo registramos aquí para evitar tocar initComponents().
+        jButton3.addActionListener(e -> {
+            javax.swing.JFileChooser selector = new javax.swing.JFileChooser();
+            selector.setFileSelectionMode(javax.swing.JFileChooser.FILES_AND_DIRECTORIES);
+            boolean es = "es".equals(idiomaSeleccionado);
+            selector.setDialogTitle(es ? "Selecciona la ruta del emulador DOS"
+                                       : "Select the DOS emulator path");
+            if (selector.showOpenDialog(this) == javax.swing.JFileChooser.APPROVE_OPTION) {
+                rutaEmuladorDOS = selector.getSelectedFile().getAbsolutePath();
+                jTextField3.setText(rutaEmuladorDOS);
+            }
+        });
+
         jColorChooser1.getSelectionModel().addChangeListener(e -> {
             Color nuevoColor = jColorChooser1.getColor();
 
@@ -323,7 +403,34 @@ public class JConfig extends javax.swing.JDialog {
 
     private void actualizarTextosDeJConfig(String idioma) {
         boolean es = idioma.equals("es");
+
+        // Título de la ventana
+        setTitle(es ? "Configuración" : "Settings");
+
+        // Botones de acción
         Aceptar.setText(es ? "Aceptar" : "OK");
+        Cancelar.setText(es ? "Cancelar" : "Cancel");
+
+        // Etiquetas de la pestaña Fuentes
+        Tam.setText(es ? "Tamaño" : "Size");
+        jLabel1.setText(es ? "Estilo" : "Style");
+        jLabel2.setText(es ? "Color" : "Color");
+        jLabel3.setText(es ? "Fuente:" : "Font:");
+
+        // Etiquetas de la pestaña Compilación
+        jLabel4.setText(es ? "Ruta de trabajo" : "Working path");
+        jLabel5.setText(es ? "Ruta de ensamblador" : "Assembler path");
+        jLabel6.setText(es ? "Ruta de emulador DOS" : "DOS emulator path");
+        String txtBuscar = es ? "Buscar" : "Browse";
+        jButton1.setText(txtBuscar);
+        jButton2.setText(txtBuscar);
+        jButton3.setText(txtBuscar);
+
+        // Pestañas
+        if (jTabbedPane1.getTabCount() >= 2) {
+            jTabbedPane1.setTitleAt(0, es ? "Fuentes" : "Fonts");
+            jTabbedPane1.setTitleAt(1, es ? "Compilación" : "Compilation");
+        }
     }
 
     private void cargarEstilos() {
@@ -474,6 +581,18 @@ public class JConfig extends javax.swing.JDialog {
         prop.setProperty("fuente", nueva.getFamily());
         prop.setProperty("estilo", String.valueOf(nueva.getStyle()));
         prop.setProperty("tamaño", String.valueOf(nueva.getSize()));
+
+        // Persistir rutas de la pestaña Compilación. Se toman directamente
+        // del campo de texto (no sólo de la variable estática) para que
+        // funcionen tanto si el usuario las eligió con "Buscar" como si las
+        // tecleó manualmente.
+        rutaPorDefecto   = jTextField1.getText() == null ? "" : jTextField1.getText();
+        rutaEnsamblador  = jTextField2.getText() == null ? "" : jTextField2.getText();
+        rutaEmuladorDOS  = jTextField3.getText() == null ? "" : jTextField3.getText();
+        prop.setProperty("rutaTrabajo",     rutaPorDefecto);
+        prop.setProperty("rutaEnsamblador", rutaEnsamblador);
+        prop.setProperty("rutaEmuladorDOS", rutaEmuladorDOS);
+
         archivo.EscribirPropiedades(prop);
     }
 
@@ -913,7 +1032,17 @@ public class JConfig extends javax.swing.JDialog {
     }//GEN-LAST:event_jTextField3ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
+        // Selector para la ruta del ensamblador. Acepta carpeta o archivo
+        // ejecutable; el usuario decide.
+        javax.swing.JFileChooser selector = new javax.swing.JFileChooser();
+        selector.setFileSelectionMode(javax.swing.JFileChooser.FILES_AND_DIRECTORIES);
+        boolean es = "es".equals(idiomaSeleccionado);
+        selector.setDialogTitle(es ? "Selecciona la ruta del ensamblador"
+                                   : "Select the assembler path");
+        if (selector.showOpenDialog(this) == javax.swing.JFileChooser.APPROVE_OPTION) {
+            rutaEnsamblador = selector.getSelectedFile().getAbsolutePath();
+            jTextField2.setText(rutaEnsamblador);
+        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -922,8 +1051,10 @@ public class JConfig extends javax.swing.JDialog {
         // Configurar para que SOLO deje seleccionar CARPETAS, no archivos
         selector.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
 
-        // Opcional: poner título
-        selector.setDialogTitle("Selecciona la carpeta por defecto para guardar");
+        // Opcional: poner título (localizado al idioma actual del diálogo)
+        boolean es = "es".equals(idiomaSeleccionado);
+        selector.setDialogTitle(es ? "Selecciona la carpeta por defecto para guardar"
+                                   : "Select the default working folder");
 
         // Mostrar el diálogo
         int resultado = selector.showOpenDialog(this);
