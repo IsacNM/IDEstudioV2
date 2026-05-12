@@ -157,10 +157,16 @@ public class GeneradorCodigoIntermedio {
     private void generarSentencia() {
         switch (comp(pos)) {
             case TokenTipo.VAR:           procesarDeclaracion(); break;
+            // CONST tiene la misma forma léxica que VAR: KEYWORD tipo id := expr;
+            // (con asignación obligatoria, validada por el semántico). El
+            // emisor de 3 direcciones puede reusarse tal cual porque ya
+            // tolera la presencia del inicializador.
+            case TokenTipo.CONST:         procesarDeclaracion(); break;
             case TokenTipo.MOSTRAR:       procesarMostrar();     break;
             case TokenTipo.LEER:          procesarLeer();        break;
             case TokenTipo.SI:            procesarSi();          break;
             case TokenTipo.WHILE:         procesarWhile();       break;
+            case TokenTipo.REPITE:        procesarRepite();      break;
             case TokenTipo.FOR:           procesarFor();         break;
             case TokenTipo.SWITCH:        procesarSwitch();      break;
             case TokenTipo.IDENTIFICADOR:
@@ -292,6 +298,41 @@ public class GeneradorCodigoIntermedio {
         } else {
             gen.gc("LABEL", "", "", etiqFalso);
         }
+    }
+
+    // ── REPITE { } HASTA (cond);  (do-while, continuación) ───────────────
+    //
+    // Semántica:  ejecuta el cuerpo al menos una vez; mientras la condición
+    // de HASTA siga siendo cierta, se vuelve a ejecutar. Cuando deja de
+    // cumplirse, se sale.
+    //
+    // 3 direcciones (mismo estilo que procesarSi / procesarWhile):
+    //     LABEL Linicio:
+    //         <cuerpo>
+    //         IF cond GOTO Linicio
+    //         GOTO Lfin
+    //     LABEL Lfin:
+    private void procesarRepite() {
+        String etiqInicio = gen.nuevaEtiq();
+        String etiqFin    = gen.nuevaEtiq();
+
+        gen.gc("LABEL", "", "", etiqInicio);
+
+        pos++; // REPITE
+        skipLlaveIzq();
+        generar(TokenTipo.LLAVE_DER);
+        skipLlaveDer();
+
+        // HASTA (cond) ;
+        if (TokenTipo.HASTA.equals(comp(pos))) pos++; // HASTA
+        skipParenIzq();
+        String condicion = recolectarCondicion();
+        skipParenDer();
+        skipPuntoComa();
+
+        gen.gc("IF",    condicion, "", etiqInicio);
+        gen.gc("GOTO",  "",        "", etiqFin);
+        gen.gc("LABEL", "",        "", etiqFin);
     }
 
     // ── WHILE (cond) { } ─────────────────────────────────────────────────

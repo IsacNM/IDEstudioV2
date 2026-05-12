@@ -18,7 +18,13 @@ public class TablaSimbolos {
     public static void construir() {
         for (int i = 0; i < Repositorio.listaTokens.size(); i++) {
             Token token = Repositorio.listaTokens.get(i);
-            if (!TokenTipo.VAR.equals(token.getLexicalComp())) continue;
+            String comp = token.getLexicalComp();
+            boolean esVar   = TokenTipo.VAR.equals(comp);
+            boolean esConst = TokenTipo.CONST.equals(comp);
+            if (!esVar && !esConst) continue;
+
+            // Categoría que se almacenará en el símbolo: VAR o CONST.
+            String categoria = esConst ? TokenTipo.CONST : TokenTipo.VAR;
 
             i++;
             if (i >= Repositorio.listaTokens.size()) break;
@@ -32,7 +38,7 @@ public class TablaSimbolos {
                 if (TokenTipo.PUNTO_COMA.equals(t.getLexicalComp())) break;
 
                 if (TokenTipo.IDENTIFICADOR.equals(t.getLexicalComp())) {
-                    registrarVariable(t, tipo, valorDefault, i);
+                    registrarVariable(t, tipo, valorDefault, i, categoria);
 
                     // En `var T a, b := 5, c;` saltar la expresión hasta la
                     // siguiente COMA o ';' para no consumir variables aún
@@ -55,8 +61,10 @@ public class TablaSimbolos {
         return Repositorio.listaTokens.size();
     }
 
-    private static void registrarVariable(Token t, String tipo, String valorDefault, int pos) {
+    private static void registrarVariable(Token t, String tipo, String valorDefault,
+                                          int pos, String categoria) {
         String nombreVar = t.getLexeme();
+        boolean esConst = TokenTipo.CONST.equals(categoria);
 
         if (Repositorio.tablaSimbolos.containsKey(nombreVar)) {
             Repositorio.listaErrores.add(new ErrorLSSL(
@@ -66,7 +74,18 @@ public class TablaSimbolos {
             return;
         }
 
-        String valorInicial = TokenUtils.tokenEn(pos + 1, TokenTipo.ASIGNACION)
+        boolean tieneInit = TokenUtils.tokenEn(pos + 1, TokenTipo.ASIGNACION);
+
+        // Las constantes DEBEN inicializarse en la propia declaración.
+        if (esConst && !tieneInit) {
+            Repositorio.listaErrores.add(new ErrorLSSL(
+                ErrorSemantico.CONST_SIN_VALOR.id,
+                "Error semántico: La constante '" + nombreVar
+                + "' debe inicializarse en la declaración.",
+                t));
+        }
+
+        String valorInicial = tieneInit
             ? ProcesadorAsignaciones.evaluarExpresion(pos + 2, true)
             : valorDefault;
 
@@ -74,7 +93,7 @@ public class TablaSimbolos {
         simbolo.setIdent(nombreVar);
         simbolo.setTipoDato(tipo);
         simbolo.setValor(valorInicial);
-        simbolo.setVarConstParam(TokenTipo.VAR);
+        simbolo.setVarConstParam(categoria);
         Repositorio.tablaSimbolos.put(nombreVar, simbolo);
     }
 }

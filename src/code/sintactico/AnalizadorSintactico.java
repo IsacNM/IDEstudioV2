@@ -161,6 +161,15 @@ public class AnalizadorSintactico {
                     + " (IDENTIFICADOR | expresion) (ASIGNACION (expresion | condicion))?"
                     + " (COMA (IDENTIFICADOR | expresion) (ASIGNACION (expresion | condicion))?)*"
                     + " PUNTO_COMA");
+            // const_st: declaración de constante. A diferencia de decl_st, la
+            // asignación es OBLIGATORIA — una constante debe nacer con valor.
+            //   const entero PI := 3;                      → simple
+            //   const decimal X := 1.5, Y := 2.5;          → múltiple
+            g.group("const_st",
+                    "CONST tipo_dato"
+                    + " (IDENTIFICADOR | expresion) ASIGNACION (expresion | condicion)"
+                    + " (COMA (IDENTIFICADOR | expresion) ASIGNACION (expresion | condicion))*"
+                    + " PUNTO_COMA");
             g.group("asig_st", "(IDENTIFICADOR | expresion | condicion) ASIGNACION (expresion | condicion) PUNTO_COMA");
             g.group("io_st", "(MOSTRAR | LEER) (PAREN_IZQ (expresion | condicion | IDENTIFICADOR) PAREN_DER | expresion | condicion | IDENTIFICADOR) PUNTO_COMA");
             g.group("inc_st", "(OP_INCREMENTO | OP_DECREMENTO) (expresion | condicion | IDENTIFICADOR)");
@@ -168,7 +177,7 @@ public class AnalizadorSintactico {
 
             // --- 3. EMPAQUETADO TEMPORAL PARA BLOQUES ---
             // Solo incluimos lo que NO sea 'crecimiento' (if, for, etc.)
-            g.group("sent_atomic", "decl_st | asig_st | io_st | inc_st | brk_st");
+            g.group("sent_atomic", "decl_st | const_st | asig_st | io_st | inc_st | brk_st");
             g.group("list_atomic", "sent_atomic+");
             g.group("list_atomic", "list_atomic sent_atomic");
             g.group("list_atomic", "sent_atomic list_atomic");
@@ -194,6 +203,14 @@ public class AnalizadorSintactico {
             g.group("while_st", "WHILE (condicion | expresion) bloque");
             g.group("for_st", "FOR PAREN_IZQ (list_atomic | list_complex)? (condicion | expresion) PUNTO_COMA (inc_st | list_atomic | list_complex)? PAREN_DER bloque");
 
+            // REPITE { ... } HASTA (cond);   (do-while, continuación)
+            // El cuerpo se ejecuta al menos una vez; mientras la condición
+            // sea cierta se vuelve a repetir. La condición se evalúa después
+            // del bloque y, gracias a `factor`/`condicion` que aceptan
+            // paréntesis envolventes, `(condicion | expresion)` matchea el
+            // `(cond)` envuelto.
+            g.group("do_while_st", "REPITE bloque HASTA (condicion | expresion) PUNTO_COMA");
+
             // Switch: cuerpo OBLIGATORIO. Si dejamos un fallback "CASE expr :"
             // sin cuerpo dentro del loop, matchea en la iter 1 (cuando list_complex
             // del if/for/while interno aún no se ha formado) y deja el cuerpo
@@ -216,7 +233,7 @@ public class AnalizadorSintactico {
             g.group("switch_st", "SWITCH (expresion | condicion) LLAVE_IZQ def_st LLAVE_DER");
 
             // --- 6. FUSIÓN DE ESTRUCTURAS ---
-            g.group("sent_complex", "if_st | for_st | while_st | switch_st");
+            g.group("sent_complex", "if_st | for_st | while_st | do_while_st | switch_st");
             g.group("sentencia", "sent_atomic | sent_complex");
             g.group("list_complex", "sentencia+");
             g.group("list_complex", "list_complex sentencia");

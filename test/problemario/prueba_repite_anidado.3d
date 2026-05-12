@@ -1,0 +1,24 @@
+i:=0;
+LIMITE:=3;
+L1:
+j:=0;
+T1:=i+1;
+i:=T1;
+L3:
+T2:=j+1;
+j:=T2;
+MOSTRAR j;
+if (j::2-y-i>1) then GOTO L5;
+GOTO L6;
+L5:
+MOSTRAR "punto medio";
+L6:
+if (j<LIMITE) then GOTO L3;
+GOTO L4;
+L4:
+MOSTRAR "fila terminada:";
+MOSTRAR i;
+if (i<2) then GOTO L1;
+GOTO L2;
+L2:
+MOSTRAR "fin";

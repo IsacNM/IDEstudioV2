@@ -1,0 +1,13 @@
+i:=0;
+total:=0;
+L1:
+T1:=i+1;
+i:=T1;
+T2:=total+i;
+total:=T2;
+MOSTRAR i;
+if (i<5) then GOTO L1;
+GOTO L2;
+L2:
+MOSTRAR "total:";
+MOSTRAR total;

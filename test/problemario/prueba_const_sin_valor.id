@@ -1,0 +1,8 @@
+-# Una constante DEBE inicializarse en la propia declaración.
+-# Este programa debe producir un error semántico CONST_SIN_VALOR (109).
+inicio {
+
+    const entero MAX;
+    mostrar(MAX);
+
+} fin

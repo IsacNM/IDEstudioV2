@@ -1,0 +1,18 @@
+-# Prueba básica de repite/hasta (do-while con semántica de continuación).
+-# El cuerpo se ejecuta al menos una vez; sigue repitiéndose mientras la
+-# condición de HASTA sea cierta.
+inicio {
+
+    var entero i := 0;
+    var entero total := 0;
+
+    repite {
+        i := i + 1;
+        total := total + i;
+        mostrar(i);
+    } hasta (i < 5);
+
+    mostrar("total:");
+    mostrar(total);
+
+} fin

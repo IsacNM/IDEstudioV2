@@ -21,6 +21,8 @@ public enum ErrorSemantico {
     CONDICION_NO_BOOLEANA         (105),
     COMPARACION_INVALIDA          (106),
     VAR_DUPLICADA                 (107),
+    CONST_REASIGNADA              (108),
+    CONST_SIN_VALOR               (109),
     PAREN_DESEQUILIBRADO_ABIERTOS (110),
     PAREN_DESEQUILIBRADO_CERRADOS (111);
 

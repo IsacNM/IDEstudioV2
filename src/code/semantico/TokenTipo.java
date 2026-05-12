@@ -11,6 +11,7 @@ public final class TokenTipo {
     // Identificadores y estructura
     public static final String IDENTIFICADOR  = "IDENTIFICADOR";
     public static final String VAR            = "VAR";
+    public static final String CONST          = "CONST";
     public static final String ASIGNACION     = "ASIGNACION";
     public static final String COMA           = "COMA";
     public static final String PUNTO_COMA     = "PUNTO_COMA";
@@ -77,4 +78,6 @@ public final class TokenTipo {
     public static final String CASE           = "CASE";
     public static final String DEFAULT        = "DEFAULT";
     public static final String BREAK          = "BREAK";
+    public static final String REPITE         = "REPITE";
+    public static final String HASTA          = "HASTA";
 }

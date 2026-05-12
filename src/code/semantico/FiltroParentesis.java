@@ -86,7 +86,8 @@ public class FiltroParentesis {
             || TokenTipo.SI.equals(comp)      || TokenTipo.SINO.equals(comp)
             || TokenTipo.WHILE.equals(comp)   || TokenTipo.FOR.equals(comp)
             || TokenTipo.SWITCH.equals(comp)  || TokenTipo.CASE.equals(comp)
-            || TokenTipo.DEFAULT.equals(comp) || TokenTipo.BREAK.equals(comp);
+            || TokenTipo.DEFAULT.equals(comp) || TokenTipo.BREAK.equals(comp)
+            || TokenTipo.REPITE.equals(comp)  || TokenTipo.HASTA.equals(comp);
     }
 
     /** Registra el mismo objeto en ambas listas para poder filtrarlo por identidad. */

@@ -1,0 +1,16 @@
+-# Prueba de errores semánticos sobre constantes.
+-# Cada bloque debe producir un error específico.
+inicio {
+
+    const entero MAX := 5;
+
+    -# (1) Reasignación directa: ERROR CONST_REASIGNADA (108)
+    MAX := 10;
+
+    -# (2) Lectura sobre constante: ERROR CONST_REASIGNADA (108)
+    leer(MAX);
+
+    -# (3) Incremento de constante: ERROR CONST_REASIGNADA (108)
+    ++>MAX;
+
+} fin

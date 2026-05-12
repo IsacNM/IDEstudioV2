@@ -1,0 +1,24 @@
+-# Prueba básica de constantes (const).
+-# Declaración con valor obligatorio; pueden ser usadas en expresiones
+-# pero NO pueden ser reasignadas.
+inicio {
+
+    const entero MAX := 10;
+    const decimal IVA := 0.16;
+    const texto SALUDO := "hola";
+
+    var entero i := 0;
+    var decimal precio := 100.0;
+    var decimal total := 0.0;
+
+    mostrar(SALUDO);
+
+    -# Las constantes se pueden LEER en expresiones
+    total := precio + precio * IVA;
+    mostrar(total);
+
+    isac (i := 1; i <= MAX; ++>i) {
+        mostrar(i);
+    }
+
+} fin

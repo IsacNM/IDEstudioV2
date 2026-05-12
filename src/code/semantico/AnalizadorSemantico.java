@@ -21,6 +21,7 @@ public class AnalizadorSemantico {
         AuxSemantico.validarTiposEnOperaciones(Repositorio.listaErrores);
         AuxSemantico.validarCondicionesBooleanas(Repositorio.listaErrores);
         AuxSemantico.validarTiposEnComparaciones(Repositorio.listaErrores);
+        AuxSemantico.validarConstantesNoReasignadas(Repositorio.listaErrores);
     }
 
 }

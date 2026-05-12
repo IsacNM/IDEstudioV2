@@ -1,0 +1,3 @@
+MAX:=5;
+MAX:=10;
+LEER MAX;

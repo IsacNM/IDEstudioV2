@@ -13,7 +13,9 @@ public class AuxSemantico {
             Token token = Repositorio.listaTokens.get(i);
 
             if (!TokenTipo.IDENTIFICADOR.equals(token.getLexicalComp())) continue;
-            if (TokenUtils.tokenEn(i - 2, TokenTipo.VAR)) continue;
+            // Saltar el identificador inmediatamente después de un VAR/CONST + tipo
+            if (TokenUtils.tokenEn(i - 2, TokenTipo.VAR)
+                    || TokenUtils.tokenEn(i - 2, TokenTipo.CONST)) continue;
 
             if (!Repositorio.tablaSimbolos.containsKey(token.getLexeme())) {
                 errores.add(new ErrorLSSL(
@@ -34,6 +36,7 @@ public class AuxSemantico {
             String nombreVar = token.getLexeme();
 
             boolean esDeclaracion = TokenUtils.tokenEn(i - 2, TokenTipo.VAR)
+                    || TokenUtils.tokenEn(i - 2, TokenTipo.CONST)
                     || (TokenUtils.tokenEn(i - 1, TokenTipo.COMA) && hayVarAntes(i));
 
             if (esDeclaracion) {
@@ -63,8 +66,9 @@ public class AuxSemantico {
     private static boolean hayVarAntes(int desdeIndex) {
         for (int j = desdeIndex - 1; j >= 0; j--) {
             String comp = Repositorio.listaTokens.get(j).getLexicalComp();
-            if (TokenTipo.VAR.equals(comp))        return true;
-            if (TokenTipo.PUNTO_COMA.equals(comp)) return false;
+            if (TokenTipo.VAR.equals(comp)
+                    || TokenTipo.CONST.equals(comp))   return true;
+            if (TokenTipo.PUNTO_COMA.equals(comp))     return false;
         }
         return false;
     }
@@ -183,15 +187,19 @@ public class AuxSemantico {
         }
     }
 
-    // ── Condiciones booleanas en si/mientras ─────────────────────────────
+    // ── Condiciones booleanas en si/mientras/repite ──────────────────────
     public static void validarCondicionesBooleanas(List<ErrorLSSL> errores) {
         for (int i = 0; i < Repositorio.listaTokens.size(); i++) {
             Token token = Repositorio.listaTokens.get(i);
+            String comp = token.getLexicalComp();
 
-            if (!TokenTipo.SI.equals(token.getLexicalComp())
-                    && !TokenTipo.WHILE.equals(token.getLexicalComp())) {
-                continue;
-            }
+            // SI y WHILE: condición aparece justo después (saltando el '(').
+            // HASTA: la condición sigue al cierre del bloque do-while, también
+            // tras el '('. (REPITE solo abre el bloque, no lleva condición.)
+            boolean esEntradaCond = TokenTipo.SI.equals(comp)
+                    || TokenTipo.WHILE.equals(comp)
+                    || TokenTipo.HASTA.equals(comp);
+            if (!esEntradaCond) continue;
 
             boolean tieneRelacional = false;
             Token primerToken = null;
@@ -211,6 +219,54 @@ public class AuxSemantico {
                             "Error semántico: La condición debe ser booleana (comparación o valor lógico).",
                             primerToken));
                 }
+            }
+        }
+    }
+
+    // ── Reasignación de constantes ───────────────────────────────────────
+    /**
+     * Detecta `id := ...` y `leer(id);` cuando {@code id} fue declarado como
+     * CONST. Las constantes solo pueden recibir valor en su declaración.
+     */
+    public static void validarConstantesNoReasignadas(List<ErrorLSSL> errores) {
+        for (int i = 0; i < Repositorio.listaTokens.size(); i++) {
+            Token token = Repositorio.listaTokens.get(i);
+            if (!TokenTipo.IDENTIFICADOR.equals(token.getLexicalComp())) continue;
+
+            String nombre = token.getLexeme();
+            Simbolo s = Repositorio.tablaSimbolos.get(nombre);
+            if (s == null || !TokenTipo.CONST.equals(s.getVarConstParam())) continue;
+
+            // Saltar el propio identificador en la declaración (CONST tipo id ...
+            // o en una lista CONST tipo a := 1, b := 2 — donde tenemos COMA antes).
+            if (TokenUtils.tokenEn(i - 2, TokenTipo.CONST)) continue;
+            if (TokenUtils.tokenEn(i - 1, TokenTipo.COMA) && hayVarAntes(i)) continue;
+
+            // Caso 1:  id := expr;
+            if (TokenUtils.tokenEn(i + 1, TokenTipo.ASIGNACION)) {
+                errores.add(new ErrorLSSL(
+                        ErrorSemantico.CONST_REASIGNADA.id,
+                        "Error semántico: No se puede reasignar la constante '" + nombre + "'.",
+                        token));
+                continue;
+            }
+
+            // Caso 2:  leer(id);
+            if (TokenUtils.tokenEn(i - 2, TokenTipo.LEER)
+                    && TokenUtils.tokenEn(i - 1, TokenTipo.PAREN_IZQ)) {
+                errores.add(new ErrorLSSL(
+                        ErrorSemantico.CONST_REASIGNADA.id,
+                        "Error semántico: No se puede leer un valor en la constante '" + nombre + "'.",
+                        token));
+            }
+
+            // Caso 3:  ++>id o --<id  (incremento/decremento)
+            if (TokenUtils.tokenEn(i - 1, TokenTipo.OP_INCREMENTO)
+                    || TokenUtils.tokenEn(i - 1, TokenTipo.OP_DECREMENTO)) {
+                errores.add(new ErrorLSSL(
+                        ErrorSemantico.CONST_REASIGNADA.id,
+                        "Error semántico: No se puede incrementar/decrementar la constante '" + nombre + "'.",
+                        token));
             }
         }
     }

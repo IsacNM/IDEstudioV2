@@ -1,0 +1,153 @@
+suma:=0;
+aprobados:=0;
+reprobados:=0;
+promedio:=0.0;
+maximo:=0.0;
+encabezado:="=== reporte de calificaciones ===";
+mensaje:="";
+continuar:=cierto;
+n:=5;
+i:=1;
+opcion:=0;
+mensaje:="inicio del programa";
+MOSTRAR encabezado;
+MOSTRAR mensaje;
+MOSTRAR "ingrese cuantos alumnos evaluara (1..10):";
+LEER n;
+if (n<1-o-n>10) then GOTO L1;
+GOTO L2;
+L1:
+MOSTRAR "rango invalido, se usara n := 3";
+n:=3;
+GOTO L3;
+L2:
+if (n::1-y-continuar::cierto) then GOTO L4;
+GOTO L5;
+L4:
+MOSTRAR "solo se evaluara un alumno";
+GOTO L6;
+L5:
+MOSTRAR "rango aceptado";
+L6:
+L3:
+i:=1;
+L7:
+if (i<=n) then GOTO L8;
+GOTO L9;
+L8:
+MOSTRAR "ingrese la nota del alumno:";
+MOSTRAR i;
+LEER nota;
+T1:=i*2;
+T2:=T1+3;
+T3:=suma+T2;
+T4:=i%2;
+T5:=T4*4;
+T6:=T3-T5;
+suma:=T6;
+if (nota>=70.0-y-nota<=100.0) then GOTO L10;
+GOTO L11;
+L10:
+T7:=aprobados+1;
+aprobados:=T7;
+GOTO L12;
+L11:
+if (nota>=0.0-y-nota<70.0) then GOTO L13;
+GOTO L14;
+L13:
+T8:=reprobados+1;
+reprobados:=T8;
+GOTO L15;
+L14:
+MOSTRAR "nota fuera de [0..100], se ignora";
+L15:
+L12:
+if (nota>maximo) then GOTO L16;
+GOTO L17;
+L16:
+maximo:=nota;
+L17:
+i:=i+1;
+GOTO L7;
+L9:
+T9:=suma*10;
+T10:=n*5;
+T11:=T9+T10;
+T12:=n+1;
+T13:=T11/T12;
+T14:=n%3;
+T15:=T14*2;
+T16:=T13-T15;
+promedio:=T16;
+MOSTRAR "promedio calculado:";
+MOSTRAR promedio;
+MOSTRAR "maximo:";
+MOSTRAR maximo;
+MOSTRAR "elija reporte: 1=aprobados 2=reprobados 3=ambos";
+LEER opcion;
+if (opcion::1) then GOTO L19;
+if (opcion::2) then GOTO L20;
+if (opcion::3) then GOTO L21;
+GOTO L22;
+L19:
+T17:=0&+0;
+mensaje:=T17;
+MOSTRAR mensaje;
+MOSTRAR aprobados;
+GOTO L18;
+L20:
+T18:=0&+0;
+mensaje:=T18;
+MOSTRAR mensaje;
+MOSTRAR reprobados;
+GOTO L18;
+L21:
+MOSTRAR "aprobados:";
+MOSTRAR aprobados;
+MOSTRAR "reprobados:";
+MOSTRAR reprobados;
+GOTO L18;
+L22:
+MOSTRAR "opcion no reconocida";
+L18:
+i:=n;
+L23:
+if (i>0-y-continuar::cierto) then GOTO L24;
+GOTO L25;
+L24:
+MOSTRAR "cuenta regresiva:";
+MOSTRAR i;
+if (i::1) then GOTO L26;
+GOTO L27;
+L26:
+continuar:=falso;
+L27:
+T19:=i-1;
+i:=T19;
+GOTO L23;
+L25:
+i:=n;
+L28:
+if (i>=1) then GOTO L29;
+GOTO L30;
+L29:
+MOSTRAR i;
+i:=i-1;
+GOTO L28;
+L30:
+if (-n-(aprobados::0)-y-promedio>=70.0) then GOTO L31;
+GOTO L32;
+L31:
+MOSTRAR "grupo con buen desempeno";
+GOTO L33;
+L32:
+if (aprobados::0) then GOTO L34;
+GOTO L35;
+L34:
+MOSTRAR "ningun alumno aprobo";
+GOTO L36;
+L35:
+MOSTRAR "desempeno regular";
+L36:
+L33:
+MOSTRAR "fin del programa";

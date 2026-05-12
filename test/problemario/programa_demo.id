@@ -1,0 +1,169 @@
+-#[
+ ============================================================
+   PROBLEMARIO - PASO 1
+   Programa de ejemplo funcional del compilador IDEstudioV2.
+   Cubre cada uno de los puntos solicitados:
+     (a) Declaraciones simples y con asignaciones.
+     (b) Asignaciones simples.
+     (c) Asignaciones de expresiones aritméticas complejas.
+     (d) Expresiones relacionales compuestas.
+     (e) Todas las estructuras de selección (si/sino, suich).
+     (f) Todas las estructuras de iteración (isac, diego).
+     (g) Todas las instrucciones del compilador
+         (var, leer, mostrar, :=, ++>, --<, rompe).
+   Programa: cálculo de promedio y clasificación de
+   calificaciones de un grupo de alumnos.
+ ============================================================
+]#
+inicio {
+
+    -# ----------------------------------------------------------
+    -# (a) DECLARACIONES SIMPLES (sin inicializador)
+    -# ----------------------------------------------------------
+    var entero n;
+    var entero i;
+    var entero opcion;
+    var decimal nota;
+
+    -# ----------------------------------------------------------
+    -# (a) DECLARACIONES MÚLTIPLES CON ASIGNACIÓN
+    -# ----------------------------------------------------------
+    var entero suma := 0, aprobados := 0, reprobados := 0;
+    var decimal promedio := 0.0, maximo := 0.0;
+    var texto  encabezado := "=== reporte de calificaciones ===";
+    var texto  mensaje := "";
+    var logico continuar := cierto;
+
+    -# ----------------------------------------------------------
+    -# (b) ASIGNACIONES SIMPLES
+    -# ----------------------------------------------------------
+    n := 5;
+    i := 1;
+    opcion := 0;
+    mensaje := "inicio del programa";
+
+    mostrar(encabezado);
+    mostrar(mensaje);
+
+    -# ----------------------------------------------------------
+    -# Instrucción LEER (entrada estándar)
+    -# ----------------------------------------------------------
+    mostrar("ingrese cuantos alumnos evaluara (1..10):");
+    leer(n);
+
+    -# ----------------------------------------------------------
+    -# (d) EXPRESIÓN RELACIONAL COMPUESTA  +
+    -# (e) SELECCIÓN si / sino si / sino
+    -# ----------------------------------------------------------
+    si (n < 1 -o- n > 10) {
+        mostrar("rango invalido, se usara n := 3");
+        n := 3;
+    } sino si (n :: 1 -y- continuar :: cierto) {
+        mostrar("solo se evaluara un alumno");
+    } sino {
+        mostrar("rango aceptado");
+    }
+
+    -# ----------------------------------------------------------
+    -# (f) ITERACIÓN isac (FOR) con INCREMENTO ++>
+    -#     Acumula la suma y detecta el máximo.
+    -# (c) ASIGNACIÓN DE EXPRESIÓN ARITMÉTICA COMPLEJA dentro
+    -# ----------------------------------------------------------
+    isac (i := 1; i <= n; ++>i) {
+        mostrar("ingrese la nota del alumno:");
+        mostrar(i);
+        leer(nota);
+
+        -# (c) expresión aritmética compleja con paréntesis,
+        -#     mezcla de tipos y operadores aritméticos.
+        suma := suma + (i * 2 + 3) - (i % 2) * 4;
+
+        -# (d) condición relacional compuesta (and/or)
+        si (nota >= 70.0 -y- nota <= 100.0) {
+            aprobados := aprobados + 1;
+        } sino si (nota >= 0.0 -y- nota < 70.0) {
+            reprobados := reprobados + 1;
+        } sino {
+            mostrar("nota fuera de [0..100], se ignora");
+        }
+
+        -# detectar máximo
+        si (nota > maximo) {
+            maximo := nota;
+        }
+    }
+
+    -# ----------------------------------------------------------
+    -# (c) EXPRESIÓN ARITMÉTICA COMPLEJA (mezcla *, /, +, -, %, paréntesis)
+    -# ----------------------------------------------------------
+    promedio := (suma * 10 + n * 5) / (n + 1) - (n % 3) * 2;
+
+    mostrar("promedio calculado:");
+    mostrar(promedio);
+    mostrar("maximo:");
+    mostrar(maximo);
+
+    -# ----------------------------------------------------------
+    -# (e) SELECCIÓN suich / caso / defecto / rompe
+    -#     Menú para mostrar diferentes reportes.
+    -# ----------------------------------------------------------
+    mostrar("elija reporte: 1=aprobados 2=reprobados 3=ambos");
+    leer(opcion);
+
+    suich (opcion) {
+        caso 1:
+            mensaje := "alumnos aprobados:" &+ "total";
+            mostrar(mensaje);
+            mostrar(aprobados);
+            rompe;
+        caso 2:
+            mensaje := "alumnos reprobados:" &+ "total";
+            mostrar(mensaje);
+            mostrar(reprobados);
+            rompe;
+        caso 3:
+            mostrar("aprobados:");
+            mostrar(aprobados);
+            mostrar("reprobados:");
+            mostrar(reprobados);
+            rompe;
+        defecto:
+            mostrar("opcion no reconocida");
+            rompe;
+    }
+
+    -# ----------------------------------------------------------
+    -# (f) ITERACIÓN diego (WHILE) con condición relacional compuesta
+    -#     Cuenta regresiva mientras se cumplan dos condiciones.
+    -# ----------------------------------------------------------
+    i := n;
+    diego (i > 0 -y- continuar :: cierto) {
+        mostrar("cuenta regresiva:");
+        mostrar(i);
+        si (i :: 1) {
+            continuar := falso;
+        }
+        i := i - 1;
+    }
+
+    -# ----------------------------------------------------------
+    -# (f) ITERACIÓN isac (FOR) con DECREMENTO --<
+    -# ----------------------------------------------------------
+    isac (i := n; i >= 1; --<i) {
+        mostrar(i);
+    }
+
+    -# ----------------------------------------------------------
+    -# (e) SELECCIÓN final si / sino si / sino  con operador NOT (-n-)
+    -# ----------------------------------------------------------
+    si (-n- (aprobados :: 0) -y- promedio >= 70.0) {
+        mostrar("grupo con buen desempeno");
+    } sino si (aprobados :: 0) {
+        mostrar("ningun alumno aprobo");
+    } sino {
+        mostrar("desempeno regular");
+    }
+
+    mostrar("fin del programa");
+
+} fin

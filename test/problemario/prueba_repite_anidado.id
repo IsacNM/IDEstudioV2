@@ -1,0 +1,23 @@
+-# Prueba de repite/hasta anidado y combinado con if/while.
+inicio {
+
+    var entero i := 0;
+    var entero j;
+    const entero LIMITE := 3;
+
+    repite {
+        j := 0;
+        i := i + 1;
+        repite {
+            j := j + 1;
+            mostrar(j);
+            si (j :: 2 -y- i > 1) {
+                mostrar("punto medio");
+            }
+        } hasta (j < LIMITE);
+        mostrar("fila terminada:");
+        mostrar(i);
+    } hasta (i < 2);
+
+    mostrar("fin");
+} fin

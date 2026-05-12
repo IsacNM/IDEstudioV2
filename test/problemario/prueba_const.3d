@@ -1,0 +1,20 @@
+MAX:=10;
+IVA:=0.16;
+SALUDO:="hola";
+i:=0;
+precio:=100.0;
+total:=0.0;
+MOSTRAR SALUDO;
+T1:=precio*IVA;
+T2:=precio+T1;
+total:=T2;
+MOSTRAR total;
+i:=1;
+L1:
+if (i<=MAX) then GOTO L2;
+GOTO L3;
+L2:
+MOSTRAR i;
+i:=i+1;
+GOTO L1;
+L3:
