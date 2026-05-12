@@ -60,6 +60,13 @@ public class TokenUtils {
             || TokenTipo.OP_IGUAL_IGUAL.equals(comp)  || TokenTipo.OP_DIFERENTE.equals(comp);
     }
 
+    /** True si {@code comp} es un operador lógico (-y-, -o-, -n-). */
+    public static boolean esOperadorLogico(String comp) {
+        return TokenTipo.LOGICO_AND.equals(comp)
+            || TokenTipo.LOGICO_OR.equals(comp)
+            || TokenTipo.LOGICO_NOT.equals(comp);
+    }
+
     public static boolean esTipoNumerico(String tipo) {
         return TokenTipo.TIPO_ENTERO.equals(tipo)
             || TokenTipo.TIPO_DECIMAL.equals(tipo)

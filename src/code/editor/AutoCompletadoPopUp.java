@@ -101,10 +101,15 @@ public class AutoCompletadoPopUp {
                 "diego (" + CURSOR + ") {\n" +
                 INDENT + "\n" +
                 "}");
+        // do-while con semántica de CONTINUACIÓN: el cuerpo se ejecuta al
+        // menos una vez, y se repite mientras la condición de `hasta` siga
+        // siendo cierta. Si la condición fuera `cierto`, se haría un bucle
+        // infinito — por eso la plantilla usa `i < 10` como recordatorio
+        // visual de que es una condición a editar.
         SNIPPETS.put("repite",                                // do-while
                 "repite {\n" +
                 INDENT + CURSOR + "\n" +
-                "} hasta (cierto);");
+                "} hasta (i < 10);");
 
         // E/S
         SNIPPETS.put("mostrar", "mostrar(" + CURSOR + ");");

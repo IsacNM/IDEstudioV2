@@ -1,0 +1,33 @@
+activo:=cierto;
+a:=5;
+b:=0;
+if (-n-activo) then GOTO L1;
+GOTO L2;
+L1:
+MOSTRAR "activo es falso";
+L2:
+if (-n-(a>0)) then GOTO L3;
+GOTO L4;
+L3:
+MOSTRAR "a no es positivo";
+L4:
+if (-n-activo-y-a>b) then GOTO L5;
+GOTO L6;
+L5:
+MOSTRAR "inactivo y a > b";
+L6:
+L7:
+if (-n-(a::b)) then GOTO L8;
+GOTO L9;
+L8:
+T1:=b+1;
+b:=T1;
+GOTO L7;
+L9:
+L10:
+T2:=a-1;
+a:=T2;
+if (-n-(a::0)) then GOTO L10;
+GOTO L11;
+L11:
+MOSTRAR "fin";

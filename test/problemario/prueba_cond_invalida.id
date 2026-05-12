@@ -1,0 +1,23 @@
+-# Verifica que el validador SIGA rechazando condiciones que no producen
+-# un booleano. Cada `si` debe disparar CONDICION_NO_BOOLEANA (105).
+inicio {
+
+    var entero n := 5;
+    var texto msg := "hola";
+
+    -# (1) Entero solo: ERROR 105
+    si (n) {
+        mostrar("nunca");
+    }
+
+    -# (2) Texto solo: ERROR 105
+    si (msg) {
+        mostrar("nunca");
+    }
+
+    -# (3) NOT sobre entero: ERROR 105
+    si (-n- n) {
+        mostrar("nunca");
+    }
+
+} fin

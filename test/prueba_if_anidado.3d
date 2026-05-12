@@ -43,32 +43,40 @@ GOTO L17;
 L16:
 MOSTRAR "autosuficiente";
 L17:
-if (edad<13) then GOTO L18;
+if (-n-activo) then GOTO L18;
 GOTO L19;
 L18:
-MOSTRAR "nino";
+MOSTRAR "usuario inactivo";
 GOTO L20;
 L19:
-if (edad<18) then GOTO L21;
+MOSTRAR "usuario activo";
+L20:
+if (edad<13) then GOTO L21;
 GOTO L22;
 L21:
-MOSTRAR "adolescente";
+MOSTRAR "nino";
 GOTO L23;
 L22:
-if (edad<30) then GOTO L24;
+if (edad<18) then GOTO L24;
 GOTO L25;
 L24:
-MOSTRAR "joven";
+MOSTRAR "adolescente";
 GOTO L26;
 L25:
-if (edad<60) then GOTO L27;
+if (edad<30) then GOTO L27;
 GOTO L28;
 L27:
-MOSTRAR "adulto";
+MOSTRAR "joven";
 GOTO L29;
 L28:
+if (edad<60) then GOTO L30;
+GOTO L31;
+L30:
+MOSTRAR "adulto";
+GOTO L32;
+L31:
 MOSTRAR "adulto mayor";
+L32:
 L29:
 L26:
 L23:
-L20:

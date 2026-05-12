@@ -188,6 +188,16 @@ public class AuxSemantico {
     }
 
     // ── Condiciones booleanas en si/mientras/repite ──────────────────────
+    //
+    // Reglas de aceptación:
+    //   1) La condición contiene al menos un operador relacional
+    //      (>, <, ::, :!, >=, <=)  → es booleana por construcción.
+    //   2) Contiene al menos un operador lógico BINARIO (-y- o -o-) → idem.
+    //      (-n- solo es unario y no implica nada sobre el operando, por eso
+    //      NO se considera prueba de booleano.)
+    //   3) Si no se cumplen (1) ni (2), entonces el primer token
+    //      significativo (saltando '(' y '-n-' iniciales) debe ser de
+    //      TIPO_LOGICO — literal `cierto`/`falso` o identificador `logico`.
     public static void validarCondicionesBooleanas(List<ErrorLSSL> errores) {
         for (int i = 0; i < Repositorio.listaTokens.size(); i++) {
             Token token = Repositorio.listaTokens.get(i);
@@ -201,24 +211,39 @@ public class AuxSemantico {
                     || TokenTipo.HASTA.equals(comp);
             if (!esEntradaCond) continue;
 
-            boolean tieneRelacional = false;
-            Token primerToken = null;
+            List<Token> condicion = TokenUtils.extraerHastaComponente(i + 2, TokenTipo.PAREN_DER);
+            if (condicion.isEmpty()) continue;
 
-            for (Token t : TokenUtils.extraerHastaComponente(i + 2, TokenTipo.PAREN_DER)) {
-                if (primerToken == null) primerToken = t;
-                if (TokenUtils.esOperadorRelacional(t.getLexicalComp())) {
-                    tieneRelacional = true;
+            // Reglas 1 y 2: operadores relacionales o lógicos BINARIOS
+            // (-y-, -o-) garantizan que la expresión es booleana estructural.
+            boolean tieneOpBooleano = false;
+            for (Token t : condicion) {
+                String c = t.getLexicalComp();
+                if (TokenUtils.esOperadorRelacional(c)
+                        || TokenTipo.LOGICO_AND.equals(c)
+                        || TokenTipo.LOGICO_OR.equals(c)) {
+                    tieneOpBooleano = true;
                     break;
                 }
             }
-            if (!tieneRelacional && primerToken != null) {
-                String tipo = TokenUtils.obtenerTipoDeToken(primerToken);
-                if (!TokenTipo.TIPO_LOGICO.equals(tipo)) {
-                    errores.add(new ErrorLSSL(
-                            ErrorSemantico.CONDICION_NO_BOOLEANA.id,
-                            "Error semántico: La condición debe ser booleana (comparación o valor lógico).",
-                            primerToken));
-                }
+            if (tieneOpBooleano) continue;
+
+            // Regla 3: primer token significativo (saltando '(' y '-n-').
+            Token primerSig = null;
+            for (Token t : condicion) {
+                String c = t.getLexicalComp();
+                if (TokenTipo.PAREN_IZQ.equals(c) || TokenTipo.LOGICO_NOT.equals(c)) continue;
+                primerSig = t;
+                break;
+            }
+            if (primerSig == null) continue;
+
+            String tipo = TokenUtils.obtenerTipoDeToken(primerSig);
+            if (!TokenTipo.TIPO_LOGICO.equals(tipo)) {
+                errores.add(new ErrorLSSL(
+                        ErrorSemantico.CONDICION_NO_BOOLEANA.id,
+                        "Error semántico: La condición debe ser booleana (comparación o valor lógico).",
+                        primerSig));
             }
         }
     }

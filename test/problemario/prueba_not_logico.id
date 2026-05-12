@@ -1,0 +1,37 @@
+-# Verifica que el operador lógico -n- (NOT) se acepte en condiciones.
+-# Antes este programa producía un falso positivo de
+-# CONDICION_NO_BOOLEANA porque el primer token de la condición era
+-# LOGICO_NOT y obtenerTipoDeToken devolvía null.
+inicio {
+
+    var logico activo := cierto;
+    var entero a := 5;
+    var entero b := 0;
+
+    -# 1. NOT sobre identificador lógico
+    si (-n- activo) {
+        mostrar("activo es falso");
+    }
+
+    -# 2. NOT sobre comparación entre paréntesis
+    si (-n- (a > 0)) {
+        mostrar("a no es positivo");
+    }
+
+    -# 3. NOT combinado con AND
+    si (-n- activo -y- a > b) {
+        mostrar("inactivo y a > b");
+    }
+
+    -# 4. Cadena con NOT dentro de while
+    diego (-n- (a :: b)) {
+        b := b + 1;
+    }
+
+    -# 5. NOT dentro de repite/hasta (la condición sigue a HASTA)
+    repite {
+        a := a - 1;
+    } hasta (-n- (a :: 0));
+
+    mostrar("fin");
+} fin
