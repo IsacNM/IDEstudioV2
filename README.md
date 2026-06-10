@@ -1,41 +1,31 @@
-# IDEstudioV2 - Entorno de Desarrollo para Lenguajes Personalizados
+# IDEstudioV2 
 
-IDEstudioV2 es un entorno de desarrollo integrado (IDE) desarrollado en Java, diseñado específicamente para soportar el ciclo completo de compilación de un lenguaje de programación propio. Incluye un editor de texto avanzado, un compilador integrado con análisis en múltiples fases y una interfaz de usuario intuitiva para la gestión de errores y símbolos.
-
-##  Características Principales
-
-- **Editor Avanzado:** Basado en `RSyntaxTextArea`, ofrece resaltado de sintaxis, numeración de líneas y marcado de errores en tiempo real.
-- **Compilador Multi-Fase:**
-  - **Análisis Léxico:** Identificación de tokens mediante JFlex.
-  - **Análisis Sintáctico:** Validación de la estructura gramatical del código.
-  - **Análisis Semántico:** Comprobación de tipos, declaración de variables y lógica de asignaciones.
-- **Gestión de Errores Detallada:** Consola interactiva que muestra errores léxicos, sintácticos y semánticos con ubicación exacta (línea y columna).
-- **Tabla de Símbolos:** Visualización en tiempo real de las variables, constantes y parámetros declarados durante la compilación.
-- **Interfaz Amigable:** Incluye Splash Screen, paneles de configuración y un sistema de pestañas para múltiples archivos.
-
-##  Requisitos del Sistema
-
-- **Java JDK:** Versión 8 o superior (recomendado JDK 11+).
-- **IDE:** NetBeans (Proyecto basado en Ant).
-- **Librerías Incluidas:** 
-  - `RSyntaxTextArea` para el editor.
-  - `CompilerTools` para utilidades de compilación.
-
-##  Instalación y Ejecución
-
-1. Clona o descarga el proyecto en tu máquina local.
-2. Abre el proyecto en NetBeans: `File > Open Project > IDEstudioV2`.
-3. Limpia y construye el proyecto para resolver las dependencias: `Shift + F11`.
-4. Ejecuta la aplicación: `F6`.
-
-##  Estructura del Proyecto
-
-- `src/code/`: Lógica central del compilador.
-  - `lexico/`: Definiciones de tokens y analizador JFlex.
-  - `sintactico/`: Reglas de gramática y validación estructural.
-  - `semantico/`: Validación de tipos, tabla de símbolos y lógica de negocio del lenguaje.
-- `src/view/`: Componentes de la interfaz gráfica (Swing).
-- `src/imgs/`: Recursos visuales del IDE.
+**IDEstudioV2** es un Entorno de Desarrollo Integrado (IDE) desarrollado en Java, diseñado para gestionar el ciclo completo de vida de un lenguaje de programación personalizado. Este proyecto integra herramientas de análisis léxico, sintáctico y semántico para proporcionar una experiencia de desarrollo robusta y educativa.
 
 ---
-Desarrollado como una solución integral para el estudio y creación de lenguajes de programación.
+
+## 🛠️ Características Principales
+
+* **Editor de Código Inteligente:** Construido sobre `RSyntaxTextArea`, permite resaltado de sintaxis, numeración de líneas y visualización inmediata de errores.
+* **Compilador de Alta Precisión:**
+    * **Análisis Léxico:** Generación de tokens eficiente mediante `JFlex`.
+    * **Análisis Sintáctico:** Validación rigurosa de la gramática del lenguaje.
+    * **Análisis Semántico:** Control profundo de tipos, ámbito de variables y verificación lógica.
+* **Diagnóstico de Errores:** Consola interactiva con localización exacta (línea y columna) para una depuración rápida.
+* **Gestión de Símbolos:** Tabla de símbolos en tiempo real para el seguimiento de variables, constantes y parámetros.
+* **Experiencia de Usuario:** Interfaz moderna (Swing) con sistema de pestañas, Splash Screen y paneles configurables.
+
+---
+
+## 🏗️ Arquitectura del Proyecto
+
+El proyecto sigue una estructura modular para facilitar su mantenimiento y escalabilidad:
+
+```text
+src/
+├── code/           # Lógica core del compilador
+│   ├── lexico/     # Definiciones y analizador JFlex
+│   ├── sintactico/ # Reglas gramaticales y parseo
+│   └── semantico/  # Tabla de símbolos y validación semántica
+├── view/           # Componentes de la UI (Swing)
+└── imgs/           # Recursos y assets gráficos
