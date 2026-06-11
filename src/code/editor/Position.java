@@ -19,7 +19,7 @@ public class Position {
                     : "Column: " + (columna + 1) + ", Line: " + (linea + 1) + ".";
             lblStatus.setText(texto);
         } catch (javax.swing.text.BadLocationException e) {
-            // Posición fuera del documento — caso raro, registrar pero no
+            // Posición fuera del documento - caso raro, registrar pero no
             // interrumpir el flujo del editor (la barra de estado queda intacta).
             LOG.log(Level.FINE, "BadLocation al actualizar posición de cursor", e);
         }

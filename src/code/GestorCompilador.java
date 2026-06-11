@@ -91,7 +91,7 @@ public class GestorCompilador {
             gen3D.cerrar();
 
             consola.append("\n" + SEPARADOR);
-            consola.append("                      ✓ CÓDIGO INTERMEDIO GENERADO\n");
+            consola.append("                      [OK] CÓDIGO INTERMEDIO GENERADO\n");
             consola.append(SEPARADOR);
             consola.append("Archivo .3d: " + Generador3D.obtenerRuta3D(ruta) + "\n");
         } catch (Exception e) {
@@ -108,14 +108,14 @@ public class GestorCompilador {
 
         if (Repositorio.listaErrores.isEmpty() && !lex && !paren) {
             consola.append(SEPARADOR);
-            consola.append("                               ✓ COMPILACIÓN EXITOSA\n");
+            consola.append("                               [OK] COMPILACIÓN EXITOSA\n");
             consola.append(SEPARADOR);
             consola.append("No se encontraron errores.\n");
             return;
         }
 
         consola.append(SEPARADOR);
-        consola.append("                   ⚠ ERRORES DETECTADOS EN LA COMPILACIÓN\n");
+        consola.append("                   [!] ERRORES DETECTADOS EN LA COMPILACIÓN\n");
         consola.append(SEPARADOR + "\n");
 
         if (lex) reportarErroresLexicos(consola);
@@ -130,7 +130,7 @@ public class GestorCompilador {
         for (Token t : Compilar.listaTokens) {
             if (!TokenTipo.ERROR.equals(t.getLexicalComp())) continue;
             consola.append(String.format("Línea %d, Columna %d%n", t.getLine(), t.getColumn()));
-            consola.append("  ➤ Error léxico: Símbolo no reconocido '" + t.getLexeme() + "'\n");
+            consola.append("  > Error léxico: Símbolo no reconocido '" + t.getLexeme() + "'\n");
             consola.append(DIVISOR);
         }
     }
@@ -165,7 +165,7 @@ public class GestorCompilador {
         consola.append("--- ERRORES DE PARÉNTESIS ---\n\n");
         for (ErrorLSSL error : FiltroParentesis.erroresEncontrados) {
             consola.append("  Línea: " + error.getLine() + ", Columna: " + error.getColumn() + "\n");
-            consola.append("  ➤ " + error.toString() + "\n");
+            consola.append("  > " + error.toString() + "\n");
             consola.append(DIVISOR);
         }
     }

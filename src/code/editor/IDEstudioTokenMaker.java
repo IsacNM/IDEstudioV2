@@ -195,7 +195,7 @@ public class IDEstudioTokenMaker extends AbstractTokenMaker {
                 continue;
             }
 
-            // Carácter desconocido → ERROR_IDENTIFIER (lo coloreará rojo
+            // Carácter desconocido -> ERROR_IDENTIFIER (lo coloreará rojo
             // por defecto, similar a lexer ERROR)
             addToken(arr, i, i, TokenTypes.ERROR_IDENTIFIER, docOff + i);
             i++;

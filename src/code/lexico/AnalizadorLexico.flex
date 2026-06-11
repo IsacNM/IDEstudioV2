@@ -35,32 +35,23 @@ import java.util.HashMap;
     // romper expresiones aritméticas como `a-5` o `-a + b`.
     Entero = [0-9]+
 
-    // ComentarioBloque -#[ ... ]#  (multilínea, no anidable)
-    // Reescrito para parar limpiamente al ver "]#" sin importar lo que
-    // haya antes. La versión anterior usaba `[^]]+ | "]" [^#]` que era
-    // frágil con `]` adyacente a otros caracteres.
+    // ComentarioBloque -#[ ... ]#
     ComentarioBloque   = "-#[" ( [^\]] | "]" [^#] )* "]" "#"
 
-    // ComentarioLinea -# ...   (hasta fin de línea)
-    // El primer char tras `-#` NO puede ser `[` para que no compita con
-    // ComentarioBloque (que arranca con `-#[`). El cuerpo es opcional
-    // para permitir comentarios vacíos `-#` solos en una línea.
+    // ComentarioLinea -# ...
     ComentarioLinea    = "-#" ( [^\[\n\r] [^\n\r]* )?
 
     Comentario         = {ComentarioBloque} | {ComentarioLinea}
 
     Flotante = {Entero}"."{Entero}
 
-    // Identificador: ahora acepta letras y dígitos Unicode (incluye
-    // acentos y ñ, p.ej.  `año`, `niño`, `año_actual`). Esto es
-    // consistente con que los comentarios sí permiten Unicode.
+    // Identificador
     Identificador = [_\p{L}][_\p{L}\p{N}]*
 
-    // Cadena: soporta escapes `\\`, `\"`, `\n`, `\t`, etc. La cadena no
-    // puede contener saltos de línea sin escapar (siguen prohibidos).
+    // Cadena
     Cadena   = \"([^\"\\\r\n] | \\.)*\"
 
-    // Caracter: una letra o un escape (\' \\ \n \t ...)
+    // Caracter
     Caracter = \'([^\'\\\r\n] | \\.)\'
 
 %%
@@ -178,8 +169,6 @@ import java.util.HashMap;
    IGNORAR COMENTARIOS Y ESPACIOS
    =========================================================== */
 
-    // Una única regla `{Comentario}` cubre tanto la línea como el bloque
-    // (la antigua regla duplicada `{ComentarioLinea}` era redundante).
     {Comentario}      {/* Ignorar */}
     {Espacio}         {/* Ignorar */}
 

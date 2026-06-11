@@ -104,8 +104,8 @@ public class AuxSemantico {
     /**
      * Recorre la expresión hasta el siguiente PUNTO_COMA y reporta el
      * primer token incompatible con el tipo destino.
-     *   ENTERO/CORTO → prohíbe FLOTANTE y vars DECIMAL
-     *   DECIMAL      → prohíbe CADENA, CARACTER, BOOLEAN y vars TEXTO/CAR/LOGICO
+     *   ENTERO/CORTO -> prohíbe FLOTANTE y vars DECIMAL
+     *   DECIMAL      -> prohíbe CADENA, CARACTER, BOOLEAN y vars TEXTO/CAR/LOGICO
      */
     private static void validarExpresionPorDestino(int inicio, String nombreVar,
             String tipoVar, List<ErrorLSSL> errores) {
@@ -191,13 +191,13 @@ public class AuxSemantico {
     //
     // Reglas de aceptación:
     //   1) La condición contiene al menos un operador relacional
-    //      (>, <, ::, :!, >=, <=)  → es booleana por construcción.
-    //   2) Contiene al menos un operador lógico BINARIO (-y- o -o-) → idem.
+    //      (>, <, ::, :!, >=, <=)  -> es booleana por construcción.
+    //   2) Contiene al menos un operador lógico BINARIO (-y- o -o-) -> idem.
     //      (-n- solo es unario y no implica nada sobre el operando, por eso
     //      NO se considera prueba de booleano.)
     //   3) Si no se cumplen (1) ni (2), entonces el primer token
     //      significativo (saltando '(' y '-n-' iniciales) debe ser de
-    //      TIPO_LOGICO — literal `cierto`/`falso` o identificador `logico`.
+    //      TIPO_LOGICO - literal `cierto`/`falso` o identificador `logico`.
     public static void validarCondicionesBooleanas(List<ErrorLSSL> errores) {
         for (int i = 0; i < Repositorio.listaTokens.size(); i++) {
             Token token = Repositorio.listaTokens.get(i);
@@ -263,7 +263,7 @@ public class AuxSemantico {
             if (s == null || !TokenTipo.CONST.equals(s.getVarConstParam())) continue;
 
             // Saltar el propio identificador en la declaración (CONST tipo id ...
-            // o en una lista CONST tipo a := 1, b := 2 — donde tenemos COMA antes).
+            // o en una lista CONST tipo a := 1, b := 2 - donde tenemos COMA antes).
             if (TokenUtils.tokenEn(i - 2, TokenTipo.CONST)) continue;
             if (TokenUtils.tokenEn(i - 1, TokenTipo.COMA) && hayVarAntes(i)) continue;
 

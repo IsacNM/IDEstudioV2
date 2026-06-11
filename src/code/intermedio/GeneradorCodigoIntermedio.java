@@ -186,7 +186,7 @@ public class GeneradorCodigoIntermedio {
         }
     }
 
-    // ── Declaración: VAR tipo id [:= expr] (, id [:= expr])* ; ───────────
+    // ── Declaración ──────────────────────────────────────────────────────
 
     private void procesarDeclaracion() {
         pos++; // VAR
@@ -217,7 +217,7 @@ public class GeneradorCodigoIntermedio {
         skipPuntoComa();
     }
 
-    // ── MOSTRAR (expr) ; ─────────────────────────────────────────────────
+    // ── MOSTRAR ──────────────────────────────────────────────────────────
 
     private void procesarMostrar() {
         pos++; // MOSTRAR
@@ -231,7 +231,7 @@ public class GeneradorCodigoIntermedio {
         skipPuntoComa();
     }
 
-    // ── LEER (id) ; ──────────────────────────────────────────────────────
+    // ── LEER ─────────────────────────────────────────────────────────────
 
     private void procesarLeer() {
         pos++; // LEER
@@ -246,7 +246,7 @@ public class GeneradorCodigoIntermedio {
         gen.gc("LEER", "", "", id);
     }
 
-    // ── id := expr ; ─────────────────────────────────────────────────────
+    // ── Asignación ───────────────────────────────────────────────────────
 
     private void procesarAsignacion() {
         String nombreVar = lex(pos);
@@ -262,7 +262,7 @@ public class GeneradorCodigoIntermedio {
         if (!resultado.isEmpty()) gen.gc(":=", resultado, "", nombreVar);
     }
 
-    // ── SI (cond) { } [SINO ...] ─────────────────────────────────────────
+    // ── SI ───────────────────────────────────────────────────────────────
 
     private void procesarSi() {
         String etiqTrue  = gen.nuevaEtiq();
@@ -300,18 +300,8 @@ public class GeneradorCodigoIntermedio {
         }
     }
 
-    // ── REPITE { } HASTA (cond);  (do-while, continuación) ───────────────
-    //
-    // Semántica:  ejecuta el cuerpo al menos una vez; mientras la condición
-    // de HASTA siga siendo cierta, se vuelve a ejecutar. Cuando deja de
-    // cumplirse, se sale.
-    //
-    // 3 direcciones (mismo estilo que procesarSi / procesarWhile):
-    //     LABEL Linicio:
-    //         <cuerpo>
-    //         IF cond GOTO Linicio
-    //         GOTO Lfin
-    //     LABEL Lfin:
+    // ── REPITE ───────────────────────────────────────────────────────────
+
     private void procesarRepite() {
         String etiqInicio = gen.nuevaEtiq();
         String etiqFin    = gen.nuevaEtiq();
@@ -335,7 +325,7 @@ public class GeneradorCodigoIntermedio {
         gen.gc("LABEL", "",        "", etiqFin);
     }
 
-    // ── WHILE (cond) { } ─────────────────────────────────────────────────
+    // ── WHILE ────────────────────────────────────────────────────────────
 
     private void procesarWhile() {
         String etiqRegreso = gen.nuevaEtiq();
@@ -361,7 +351,7 @@ public class GeneradorCodigoIntermedio {
         gen.gc("LABEL", "", "", etiqFalso);
     }
 
-    // ── FOR (init ; cond ; incr) { } ─────────────────────────────────────
+    // ── FOR ──────────────────────────────────────────────────────────────
 
     private void procesarFor() {
         String etiqRegreso = gen.nuevaEtiq();
@@ -404,7 +394,7 @@ public class GeneradorCodigoIntermedio {
         gen.gc("GOTO",  "",              "", etiqFalso);
         gen.gc("LABEL", "",              "", etiqTrue);
 
-        // Incrementos diferidos
+        // Incrementos
         ArrayList<String[]> incrementos = new ArrayList<>();
         while (pos < parenClose) {
             String c = comp(pos);
@@ -463,7 +453,7 @@ public class GeneradorCodigoIntermedio {
 
         String varSwitch = emitirExpresion(expSwitch);
 
-        // Pasada 1: localizar casos y la posición de cada cuerpo
+        // Pasadas: localizar casos, saltos y cuerpos.
         List<String>  valoresCaso = new ArrayList<>();
         List<String>  etiqsCaso   = new ArrayList<>();
         List<Integer> iniciosCaso = new ArrayList<>();
@@ -562,7 +552,7 @@ public class GeneradorCodigoIntermedio {
         return pila.isEmpty() ? "0" : pila.pop();
     }
 
-    /** Convierte un token a operando string para infija→postfija. */
+    /** Convierte un token a operando string para infija->postfija. */
     private String tokenAOperando(int i) {
         switch (comp(i)) {
             case TokenTipo.IDENTIFICADOR:

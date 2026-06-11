@@ -19,7 +19,7 @@ public class AnalizadorSintactico {
      * {@link Grammar#loopForFunExecUntilChangeNotDetected}.
      * 1000 ciclos cubre con holgura los programas más anidados de la suite
      * (que típicamente convergen en &lt; 50 iter). Si se alcanza, se
-     * detiene el análisis y se reporta — protege ante entradas patológicas
+     * detiene el análisis y se reporta - protege ante entradas patológicas
      * que pudieran no converger.
      */
     private static final int MAX_ITERACIONES_SINTACTICO = 1000;
@@ -117,25 +117,7 @@ public class AnalizadorSintactico {
 
         loopConTope(g, MAX_ITERACIONES_SINTACTICO, () -> {
 
-            // --- 1. EXPRESIONES Y CONDICIONES (Cimientos) ---
-            //
-            // Los paréntesis se reducen SOLO como `factor` (regla única).
-            // Para que `(a :: 0)` siga sirviendo como condicion bajo un
-            // operador lógico, el `LOGICO_NOT` (y los `-y-`/`-o-`) aceptan
-            // explícitamente `factor` como operando.
-            //
-            // FALLBACK expresion-level (clave para programas reales):
-            //   El motor consume tokens en la primera reducción que matchea.
-            //   Una vez `(i*2+3)` se promueve a `expresion` vía
-            //   factor → termino → expresion, ya no puede reusarse como
-            //   factor para combinarse con `*`/`/` adyacentes. Sin un
-            //   fallback, cadenas como `suma + (i*2+3) - (i%2) * 4` no
-            //   convergen. La regla `expresion → expresion OP expresion`
-            //   rompe esa trampa colapsando la cadena en una sola expresion.
-            //   La precedencia REAL se aplica después en
-            //   {@link EvaluadorExpresiones#infijaAPostfija} y en el
-            //   generador de 3 direcciones — el AST plano no afecta la
-            //   semántica final.
+            // Expresiones y condiciones
             g.group("factor", "PAREN_IZQ (expresion | condicion) PAREN_DER");
             g.group("factor", "IDENTIFICADOR | valor");
             g.group("termino", "factor (MULTIPLICACION | DIVISION | MODULO) factor");
@@ -146,34 +128,15 @@ public class AnalizadorSintactico {
 
             g.group("condicion_rel", "expresion (OP_MAYOR | OP_MENOR | OP_MAYOR_IGUAL | OP_MENOR_IGUAL | OP_IGUAL_IGUAL | OP_DIFERENTE) expresion");
             g.group("condicion", "condicion_rel | BOOLEAN_TRUE | BOOLEAN_FALSE | IDENTIFICADOR | factor");
-            // LOGICO_NOT y los lógicos binarios aceptan factor explícitamente.
-            // Sin `factor` en estos operandos, `-n- (a :: 0)` no reduce: el
-            // motor consume los tokens de `(a :: 0)` al promoverlos a factor
-            // (vía la regla de factor con paréntesis) y no aplica
-            // `condicion → factor` a tiempo para que el LOGICO_NOT lo vea.
             g.group("condicion", "LOGICO_NOT (condicion | expresion | factor)");
             g.group("condicion", "(condicion | expresion | factor) (LOGICO_AND | LOGICO_OR) (condicion | expresion | factor)");
 
-            // --- 2. SENTENCIAS ATÓMICAS (Sin control de flujo aún) ---
-            // Declaración:
-            //   var entero x;                        → declaración simple
-            //   var entero a := 5;                   → declaración + asignación inicial
-            //   var entero a, b, c;                  → declaración múltiple
-            //   var entero a := 1, b, c := 3;        → mezcla con/sin valor
-            //
-            // El `(ASIGNACION (expresion | condicion))?` opcional permite
-            // que cada variable pueda traer su valor inicial. Sin esto, la
-            // gramática reducía `a := 5;` como `asig_st` independiente y el
-            // `decl_st` se quedaba sin `;`, dejando VAR / tipo_dato sueltos.
+            // Sentencias atómicas
             g.group("decl_st",
                     "VAR tipo_dato"
                     + " (IDENTIFICADOR | expresion) (ASIGNACION (expresion | condicion))?"
                     + " (COMA (IDENTIFICADOR | expresion) (ASIGNACION (expresion | condicion))?)*"
                     + " PUNTO_COMA");
-            // const_st: declaración de constante. A diferencia de decl_st, la
-            // asignación es OBLIGATORIA — una constante debe nacer con valor.
-            //   const entero PI := 3;                      → simple
-            //   const decimal X := 1.5, Y := 2.5;          → múltiple
             g.group("const_st",
                     "CONST tipo_dato"
                     + " (IDENTIFICADOR | expresion) ASIGNACION (expresion | condicion)"
@@ -184,64 +147,40 @@ public class AnalizadorSintactico {
             g.group("inc_st", "(OP_INCREMENTO | OP_DECREMENTO) (expresion | condicion | IDENTIFICADOR)");
             g.group("brk_st", "BREAK PUNTO_COMA");
 
-            // --- 3. EMPAQUETADO TEMPORAL PARA BLOQUES ---
-            // Solo incluimos lo que NO sea 'crecimiento' (if, for, etc.)
+            // Bloques y control de flujo
             g.group("sent_atomic", "decl_st | const_st | asig_st | io_st | inc_st | brk_st");
             g.group("list_atomic", "sent_atomic+");
             g.group("list_atomic", "list_atomic sent_atomic");
             g.group("list_atomic", "sent_atomic list_atomic");
             g.group("list_atomic", "list_atomic list_atomic");
 
-            // --- 4. PROMOCIÓN: list_atomic se considera list_complex ---
-            // Esto permite que cuerpos que mezclan sentencias atómicas y
-            // estructuras de control (caso 1: if-else + rompe;) se fusionen
-            // en un único list_complex antes de evaluarse case_st / bloque.
             g.group("list_complex", "list_atomic");
             g.group("list_complex", "list_atomic list_complex");
             g.group("list_complex", "list_complex list_atomic");
 
-            // --- 5. ZONA DE CRECIMIENTO PROTEGIDA ---
             g.group("bloque", "LLAVE_IZQ (list_atomic | list_complex)? LLAVE_DER");
 
-            // IF: cadena por if_base (no por tokens crudos), para permitir
-            //   si {...} sino si {...} sino si {...} sino {...}
             g.group("if_base", "SI (condicion | expresion) bloque");
             g.group("if_st", "if_base (SINO if_base)* (SINO bloque)?");
 
-            // Bucles
             g.group("while_st", "WHILE (condicion | expresion) bloque");
             g.group("for_st", "FOR PAREN_IZQ (list_atomic | list_complex)? (condicion | expresion) PUNTO_COMA (inc_st | list_atomic | list_complex)? PAREN_DER bloque");
-
-            // REPITE { ... } HASTA (cond);   (do-while, continuación)
-            // El cuerpo se ejecuta al menos una vez; mientras la condición
-            // sea cierta se vuelve a repetir. La condición se evalúa después
-            // del bloque y, gracias a `factor`/`condicion` que aceptan
-            // paréntesis envolventes, `(condicion | expresion)` matchea el
-            // `(cond)` envuelto.
             g.group("do_while_st", "REPITE bloque HASTA (condicion | expresion) PUNTO_COMA");
 
-            // Switch: cuerpo OBLIGATORIO. Si dejamos un fallback "CASE expr :"
-            // sin cuerpo dentro del loop, matchea en la iter 1 (cuando list_complex
-            // del if/for/while interno aún no se ha formado) y deja el cuerpo
-            // huérfano. brk_st ya queda dentro de list_atomic/list_complex.
+            // Switch
             g.group("case_st", "CASE (expresion | condicion) DOS_PUNTOS (list_atomic | list_complex)");
             g.group("def_st", "DEFAULT DOS_PUNTOS (list_atomic | list_complex)");
-            // Extender un case_st/def_st ya formado cuando en iteraciones
-            // posteriores aparezca otro list_atomic / list_complex contiguo
-            // (p. ej. el for_st o while_st del cuerpo recién promovido).
             g.group("case_st", "case_st (list_atomic | list_complex)");
             g.group("def_st", "def_st (list_atomic | list_complex)");
             g.group("list_casos", "case_st+");
             g.group("list_casos", "list_casos case_st");
             g.group("list_casos", "case_st list_casos");
             g.group("list_casos", "list_casos list_casos");
-            // Si list_casos se cerró antes de que el for/while/if interno
-            // se promoviera a list_complex, permitir que crezca después.
             g.group("list_casos", "list_casos (list_atomic | list_complex)");
             g.group("switch_st", "SWITCH (expresion | condicion) LLAVE_IZQ list_casos (def_st)? LLAVE_DER");
             g.group("switch_st", "SWITCH (expresion | condicion) LLAVE_IZQ def_st LLAVE_DER");
 
-            // --- 6. FUSIÓN DE ESTRUCTURAS ---
+            // Finalización
             g.group("sent_complex", "if_st | for_st | while_st | do_while_st | switch_st");
             g.group("sentencia", "sent_atomic | sent_complex");
             g.group("list_complex", "sentencia+");
@@ -249,22 +188,16 @@ public class AnalizadorSintactico {
             g.group("list_complex", "sentencia list_complex");
             g.group("list_complex", "list_complex list_complex");
 
-            // --- 6. PROGRAMA ---
             g.group("programa", "INICIO bloque FIN");
         });
 
-        // Errores finales (solo se muestran si 'programa' no se formó)
+        // Errores finales
         g.group("programa", "INICIO bloque", true, 3, "Error sintáctico: Falta 'fin'");
         g.group("programa", "bloque FIN", true, 1, "Error sintáctico: Falta 'inicio'");
 
         g.show();
 
-        // Validación post-loop: si tras toda la reducción no se formó NINGUNA
-        // producción `programa`, el árbol sintáctico quedó fragmentado y los
-        // fallbacks de "falta inicio/fin" no aplicaron (porque ni siquiera
-        // se formó `bloque`). Reportamos un error genérico para que el
-        // problema no pase silencioso — antes el generador de 3 direcciones
-        // seguía emitiendo .3d incluso cuando la gramática no convergió.
+        // Validación post-loop
         if (!formoProduccionPrograma(g) && Repositorio.listaErrores.isEmpty()) {
             // Usamos el primer token disponible para la línea/columna del
             // reporte; si no hay tokens, ya se reportó otro error antes.
@@ -332,7 +265,7 @@ public class AnalizadorSintactico {
             campoProd = Grammar.class.getDeclaredField("producciones");
             campoProd.setAccessible(true);
         } catch (NoSuchFieldException e) {
-            // Versión incompatible de compilerTools — fallback seguro.
+            // Versión incompatible de compilerTools - fallback seguro.
             g.loopForFunExecUntilChangeNotDetected(r);
             return;
         }

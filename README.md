@@ -1,31 +1,24 @@
-# IDEstudioV2 
+# IDEstudioV2
 
-**IDEstudioV2** es un Entorno de Desarrollo Integrado (IDE) desarrollado en Java, diseñado para gestionar el ciclo completo de vida de un lenguaje de programación personalizado. Este proyecto integra herramientas de análisis léxico, sintáctico y semántico para proporcionar una experiencia de desarrollo robusta y educativa.
+IDEstudioV2 es un entorno de desarrollo integrado (IDE) hecho en Java para un lenguaje de programación propio. El proyecto incluye las herramientas necesarias para el análisis léxico, sintáctico y semántico del código.
 
----
+## Funciones principales
 
-## 🛠️ Características Principales
+- Editor de texto con resaltado de sintaxis (usando RSyntaxTextArea).
+- Compilador integrado:
+  - Analizador léxico con JFlex.
+  - Analizador sintáctico para validar la estructura del lenguaje.
+  - Analizador semántico con tabla de símbolos y validación de tipos.
+- Consola de salida para errores de compilación con línea y columna.
+- Interfaz gráfica sencilla con Swing.
 
-* **Editor de Código Inteligente:** Construido sobre `RSyntaxTextArea`, permite resaltado de sintaxis, numeración de líneas y visualización inmediata de errores.
-* **Compilador de Alta Precisión:**
-    * **Análisis Léxico:** Generación de tokens eficiente mediante `JFlex`.
-    * **Análisis Sintáctico:** Validación rigurosa de la gramática del lenguaje.
-    * **Análisis Semántico:** Control profundo de tipos, ámbito de variables y verificación lógica.
-* **Diagnóstico de Errores:** Consola interactiva con localización exacta (línea y columna) para una depuración rápida.
-* **Gestión de Símbolos:** Tabla de símbolos en tiempo real para el seguimiento de variables, constantes y parámetros.
-* **Experiencia de Usuario:** Interfaz moderna (Swing) con sistema de pestañas, Splash Screen y paneles configurables.
+## Organización del código
 
----
+- `src/code/`: Contiene la lógica del compilador dividida en carpetas para léxico, sintáctico y semántico.
+- `src/view/`: Clases de la interfaz gráfica y componentes de Swing.
+- `src/imgs/`: Imágenes y recursos usados en el IDE.
+- `lib/`: Librerías externas necesarias (JFlex, RSyntaxTextArea, etc).
 
-## 🏗️ Arquitectura del Proyecto
+## Cómo usarlo
 
-El proyecto sigue una estructura modular para facilitar su mantenimiento y escalabilidad:
-
-```text
-src/
-├── code/           # Lógica core del compilador
-│   ├── lexico/     # Definiciones y analizador JFlex
-│   ├── sintactico/ # Reglas gramaticales y parseo
-│   └── semantico/  # Tabla de símbolos y validación semántica
-├── view/           # Componentes de la UI (Swing)
-└── imgs/           # Recursos y assets gráficos
+El proyecto se puede abrir en NetBeans o compilar usando el archivo `build.xml` con Ant. Es necesario tener instaladas las librerías que están en la carpeta `lib`.

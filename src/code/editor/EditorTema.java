@@ -19,14 +19,14 @@ import org.fife.ui.rsyntaxtextarea.TokenTypes;
  * Mapeo de las claves del diálogo {@code JConfig} a los token types de
  * RSyntaxTextArea:
  * <pre>
- *   "Palabras reservadas" → RESERVED_WORD, RESERVED_WORD_2, DATA_TYPE
- *   "Comentarios"         → COMMENT_EOL, COMMENT_MULTILINE, COMMENT_DOCUMENTATION
- *   "Cadenas"             → LITERAL_STRING_DOUBLE_QUOTE, LITERAL_CHAR, LITERAL_BACKQUOTE
- *   "Identificadores"     → IDENTIFIER
- *   "Números enteros"     → LITERAL_NUMBER_DECIMAL_INT, LITERAL_NUMBER_HEXADECIMAL
- *   "Números flotantes"   → LITERAL_NUMBER_FLOAT
- *   "Signos de puntuación"→ SEPARATOR, OPERATOR
- *   "General"             → foreground default del editor
+ *   "Palabras reservadas" -> RESERVED_WORD, RESERVED_WORD_2, DATA_TYPE
+ *   "Comentarios"         -> COMMENT_EOL, COMMENT_MULTILINE, COMMENT_DOCUMENTATION
+ *   "Cadenas"             -> LITERAL_STRING_DOUBLE_QUOTE, LITERAL_CHAR, LITERAL_BACKQUOTE
+ *   "Identificadores"     -> IDENTIFIER
+ *   "Números enteros"     -> LITERAL_NUMBER_DECIMAL_INT, LITERAL_NUMBER_HEXADECIMAL
+ *   "Números flotantes"   -> LITERAL_NUMBER_FLOAT
+ *   "Signos de puntuación"-> SEPARATOR, OPERATOR
+ *   "General"             -> foreground default del editor
  * </pre>
  *
  * El archivo se persiste por usuario en {@link ArchivoPropiedades}.

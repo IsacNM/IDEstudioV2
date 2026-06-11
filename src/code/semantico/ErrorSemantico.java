@@ -7,9 +7,9 @@ package code.semantico;
  *
  * <pre>
  * Rangos:
- *   100-109 → semántica de variables y tipos
- *   110-119 → estructura sintáctica detectada por filtros (paréntesis)
- *   200-299 → reservado para errores estructurales reportados por
+ *   100-109 -> semántica de variables y tipos
+ *   110-119 -> estructura sintáctica detectada por filtros (paréntesis)
+ *   200-299 -> reservado para errores estructurales reportados por
  *             AnalizadorSintactico antes del Grammar
  * </pre>
  */

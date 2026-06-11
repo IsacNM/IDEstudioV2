@@ -88,7 +88,7 @@ public class JConfig extends javax.swing.JDialog {
     private void cargarConfiguracionPersistida() {
         Properties prop = new ArchivoPropiedades().LeerPropiedades();
 
-        // 1. Idioma — selecciona el radio correspondiente.
+        // 1. Idioma - selecciona el radio correspondiente.
         if (prop != null) {
             String idiomaGuardado = prop.getProperty("idioma");
             if (idiomaGuardado != null && !idiomaGuardado.isBlank()) {
@@ -101,7 +101,7 @@ public class JConfig extends javax.swing.JDialog {
             Español.setSelected(true);
         }
 
-        // 2. Fuente actual — preselecciona en la lista y muéstrala en el
+        // 2. Fuente actual - preselecciona en la lista y muéstrala en el
         //    campo "MostrarFuente" para que se vea de inmediato.
         String familia = (textPane != null && textPane.getFont() != null)
                 ? textPane.getFont().getFamily() : null;

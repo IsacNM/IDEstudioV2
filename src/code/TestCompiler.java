@@ -28,10 +28,10 @@ import java.nio.file.Paths;
  *              producir salida parcial o ruido.
  *
  * Códigos de salida:
- *   0 — éxito sin errores
- *   1 — abortado por --strict ante errores
- *   2 — argumentos inválidos
- *   3 — excepción inesperada
+ *   0 - éxito sin errores
+ *   1 - abortado por --strict ante errores
+ *   2 - argumentos inválidos
+ *   3 - excepción inesperada
  * </pre>
  */
 public class TestCompiler {

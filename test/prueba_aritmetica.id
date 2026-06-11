@@ -14,7 +14,7 @@ inicio {
     b := 4;
     c := 3;
 
-    -# Expresion sin paréntesis (precedencia) → debe emitir varios T#
+    -# Expresion sin paréntesis (precedencia) -> debe emitir varios T#
     resultado := a + b * c - 2;
 
     -# Expresion con paréntesis que cambia la precedencia

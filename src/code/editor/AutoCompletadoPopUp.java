@@ -22,11 +22,10 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
  *  - Mientras se escribe se sugieren palabras reservadas.
  *  - Al confirmar (Enter o Tab) si la palabra tiene plantilla asociada
  *    se expande a la estructura completa y el caret se posiciona en el
- *    primer "hueco" marcado por «|».
- *  - Si no hay plantilla, se inserta la palabra tal cual (comportamiento
- *    anterior).
+ *    primer "hueco" marcado por "|".
+ *  - Si no hay plantilla, se inserta la palabra tal cual.
  *
- *  Las plantillas usan «|» como marcador de posición del caret y se
+ *  Las plantillas usan "|" como marcador de posición del caret y se
  *  reindentan automáticamente respetando la indentación de la línea
  *  donde se invoca el snippet.
  */
@@ -101,11 +100,7 @@ public class AutoCompletadoPopUp {
                 "diego (" + CURSOR + ") {\n" +
                 INDENT + "\n" +
                 "}");
-        // do-while con semántica de CONTINUACIÓN: el cuerpo se ejecuta al
-        // menos una vez, y se repite mientras la condición de `hasta` siga
-        // siendo cierta. Si la condición fuera `cierto`, se haría un bucle
-        // infinito — por eso la plantilla usa `i < 10` como recordatorio
-        // visual de que es una condición a editar.
+        // do-while con semántica de CONTINUACIÓN.
         SNIPPETS.put("repite",                                // do-while
                 "repite {\n" +
                 INDENT + CURSOR + "\n" +
@@ -115,10 +110,7 @@ public class AutoCompletadoPopUp {
         SNIPPETS.put("mostrar", "mostrar(" + CURSOR + ");");
         SNIPPETS.put("leer",    "leer(" + CURSOR + ");");
 
-        // Declaraciones rápidas (con tipo predeterminado: entero, ya con
-        // asignación inicial — el patrón más común en los .id existentes).
-        // El caret queda en el nombre; tras escribirlo, el usuario navega
-        // al valor con la flecha derecha o un click.
+        // Declaraciones rápidas.
         SNIPPETS.put("var",   "var entero " + CURSOR + " := 0;");
         SNIPPETS.put("const", "const entero " + CURSOR + " := 0;");
     }
@@ -286,7 +278,7 @@ public class AutoCompletadoPopUp {
             String snippet = SNIPPETS.get(seleccionada);
 
             if (snippet == null) {
-                // Sin plantilla → simple reemplazo del prefijo (comportamiento clásico)
+                // Sin plantilla -> simple reemplazo del prefijo (comportamiento clásico)
                 editor.getDocument().remove(inicioPrefijo, pos - inicioPrefijo);
                 editor.getDocument().insertString(inicioPrefijo, seleccionada, null);
                 return;
@@ -298,7 +290,7 @@ public class AutoCompletadoPopUp {
             // Reindentar el snippet: cada salto de línea recibe la indentación base
             String expandido = aplicarIndent(snippet, indent);
 
-            // Posición del marcador del caret (puede no haber → caret al final)
+            // Posición del marcador del caret (puede no haber -> caret al final)
             int caretRelativo = expandido.indexOf(CURSOR);
             if (caretRelativo >= 0) {
                 expandido = expandido.substring(0, caretRelativo)

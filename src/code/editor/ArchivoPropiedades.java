@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 /**
  * Archivo de configuración persistido por usuario en
- * {@code $HOME/.idestudio/config.properties} (no portable a propósito —
+ * {@code $HOME/.idestudio/config.properties} (no portable a propósito -
  * cada usuario tiene su propia configuración independiente del directorio
  * desde el que se lance la aplicación).
  *
@@ -34,7 +34,7 @@ public class ArchivoPropiedades {
     public Properties LeerPropiedades() {
         Properties config = new Properties();
         if (!Files.exists(RUTA_CONFIG)) {
-            return config;   // archivo aún no existe → defaults
+            return config;   // archivo aún no existe -> defaults
         }
         try (InputStream in = new FileInputStream(RUTA)) {
             config.load(in);
